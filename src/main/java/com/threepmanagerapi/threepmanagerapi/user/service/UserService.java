@@ -203,8 +203,8 @@ public class UserService {
     public ResponseEntity changePassword(String token, ChangePasswordDto changePasswordDto) {
         try {
             Long userID = jwtService.extractuserID(token);
-            Optional<User> user = userRepository.findByUserID(userID);
-            if (user.isEmpty()) {
+            User user = userRepository.findByUserID(userID);
+            if (user==null) {
                 return responseService.formulateResponse(
                         null,
                         "User not found",
@@ -214,10 +214,10 @@ public class UserService {
                 );
             }
 
-            if (encoder.matches(changePasswordDto.getCurrentPassword(), user.get().getPassword())) {
+            if (encoder.matches(changePasswordDto.getCurrentPassword(), user.getPassword())) {
                 String encodedPassword = encoder.encode(changePasswordDto.getNewPassword());
-                user.get().setPassword(encodedPassword);
-                userRepository.save(user.get());
+                user.setPassword(encodedPassword);
+                userRepository.save(user);
                 return responseService.formulateResponse(
                         null,
                         "Password changed successfully",
