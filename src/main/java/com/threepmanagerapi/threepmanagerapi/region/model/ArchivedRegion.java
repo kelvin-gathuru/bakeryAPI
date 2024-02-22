@@ -11,13 +11,13 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Region {
+public class ArchivedRegion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long regionID;
+    private Long archivedRegionID;
     private String name;
     @OneToOne
-    @JoinColumn(name="createdBy")
+    @JoinColumn(name="userID")
     private User user;
     @Enumerated(EnumType.STRING)
     private Status status;

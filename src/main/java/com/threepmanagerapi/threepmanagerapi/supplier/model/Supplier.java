@@ -1,6 +1,5 @@
-package com.threepmanagerapi.threepmanagerapi.region.model;
+package com.threepmanagerapi.threepmanagerapi.supplier.model;
 
-import com.threepmanagerapi.threepmanagerapi.settings.Model.Status;
 import com.threepmanagerapi.threepmanagerapi.user.model.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -11,14 +10,14 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Region {
+public class Supplier {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long regionID;
+    private Long supplierID;
     private String name;
+    private String phone;
+    private String alternativeContact;
     @OneToOne
-    @JoinColumn(name="createdBy")
+    @JoinColumn(name = "userID")
     private User user;
-    @Enumerated(EnumType.STRING)
-    private Status status;
 }

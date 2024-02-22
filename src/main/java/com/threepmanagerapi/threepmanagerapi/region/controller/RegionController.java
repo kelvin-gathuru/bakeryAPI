@@ -19,4 +19,14 @@ public class RegionController {
     public ResponseEntity getRegions(@RequestHeader ("Authorization") String token) {
         return regionService.getRegions();
     }
+    @PostMapping("/region/delete")
+    public ResponseEntity deleteRegion(@RequestHeader("Authorization") String token,
+                                       @RequestBody Region region) {
+        return regionService.deleteRegion(region);
+    }
+    @PostMapping("/region/update")
+    public ResponseEntity updateRegion(@RequestHeader("Authorization") String token,
+                                       @RequestBody Region region) {
+        return regionService.updateRegion(region);
+    }
 }
