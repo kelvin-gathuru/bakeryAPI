@@ -1,6 +1,5 @@
-package com.threepmanagerapi.threepmanagerapi.materials.model;
+package com.threepmanagerapi.threepmanagerapi.products.model;
 
-import com.threepmanagerapi.threepmanagerapi.supplier.model.Supplier;
 import com.threepmanagerapi.threepmanagerapi.user.model.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -10,20 +9,17 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
-public class Material {
+public class Product {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long materialID;
+    private Long productID;
     private String name;
     private String metric;
     private BigDecimal unitPrice;
-    private BigDecimal reorderPoint;
-    private BigDecimal reorderQuantity;
-    private BigDecimal remainingQuantity;
     private LocalDateTime dateCreated;
     @OneToOne
     @JoinColumn(name="createdBy")

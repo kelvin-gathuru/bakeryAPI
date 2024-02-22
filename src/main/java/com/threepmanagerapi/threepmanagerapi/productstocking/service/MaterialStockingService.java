@@ -1,8 +1,12 @@
-package com.threepmanagerapi.threepmanagerapi.materials.service;
+package com.threepmanagerapi.threepmanagerapi.productstocking.service;
+
 import com.threepmanagerapi.threepmanagerapi.materials.model.Material;
 import com.threepmanagerapi.threepmanagerapi.materials.repository.MaterialRepository;
+import com.threepmanagerapi.threepmanagerapi.productstocking.model.MaterialStocking;
+import com.threepmanagerapi.threepmanagerapi.productstocking.repository.MaterialStockingRepository;
 import com.threepmanagerapi.threepmanagerapi.settings.service.JwtService;
 import com.threepmanagerapi.threepmanagerapi.settings.utility.ResponseService;
+import com.threepmanagerapi.threepmanagerapi.supplier.repository.SupplierRepository;
 import com.threepmanagerapi.threepmanagerapi.user.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,9 +16,12 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
 @Service
 @Slf4j
-public class MaterialService {
+public class MaterialStockingService {
+    @Autowired
+    private MaterialStockingRepository materialStockingRepository;
     @Autowired
     private MaterialRepository materialRepository;
     @Autowired
@@ -23,29 +30,31 @@ public class MaterialService {
     private ResponseService responseService;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private SupplierRepository supplierRepository;
 
-    public ResponseEntity createMaterial(String token, Material material){
+    public ResponseEntity createMaterialStock(String token, MaterialStocking materialStocking){
         try{
-            Material existingMaterial = materialRepository.findByName(material.getName());
             Long userID = jwtService.extractuserID(token);
-            if(existingMaterial!=null){
+            Material material = materialRepository.findByMaterialID(materialStocking.getMaterial().getMaterialID());
+
+            if(material==null){
                 return responseService.formulateResponse(
                         null,
-                        "Material Already Exists",
-                        HttpStatus.BAD_REQUEST,
+                        "Material not found ",
+                        HttpStatus.NOT_FOUND,
                         null,
                         false
                 );
             }
-
-            material.setUser(userRepository.findByUserID(userID));
-            material.setMetric(material.getMetric().toUpperCase());
-            material.setName(material.getName().toUpperCase());
-            material.setDateCreated(LocalDateTime.now());
+            material.setRemainingQuantity(material.getRemainingQuantity().add(materialStocking.getQuantity()));
+            materialStocking.setUser(userRepository.findByUserID(userID));
+            materialStocking.setPurchaseDate(LocalDateTime.now());
+            materialStockingRepository.save(materialStocking);
             materialRepository.save(material);
             return responseService.formulateResponse(
                     null,
-                    "Material added successfully ",
+                    "Stock added successfully ",
                     HttpStatus.OK,
                     null,
                     true
@@ -54,19 +63,19 @@ public class MaterialService {
             log.error("Encountered Exception {}", exception.getMessage());
             return responseService.formulateResponse(
                     null,
-                    "Exception creating material ",
+                    "Exception adding stock material ",
                     HttpStatus.BAD_REQUEST,
                     null,
                     false
             );
         }
     }
-    public ResponseEntity getMaterials(){
+    public ResponseEntity getMaterialStock(){
         try{
-            List<Material> materials = materialRepository.findAll();
+            List<MaterialStocking> productStockings = materialStockingRepository.findAll();
             return responseService.formulateResponse(
-                    materials,
-                    "Materials fetched successfully ",
+                    productStockings,
+                    "Stock fetched successfully ",
                     HttpStatus.OK,
                     null,
                     true
@@ -75,20 +84,20 @@ public class MaterialService {
             log.error("Encountered Exception {}", exception.getMessage());
             return responseService.formulateResponse(
                     null,
-                    "Exception fetching materials ",
+                    "Exception fetching stocks ",
                     HttpStatus.BAD_REQUEST,
                     null,
                     false
             );
         }
     }
-    public ResponseEntity updateMaterial(Material material){
+    public ResponseEntity updateMaterialStock(MaterialStocking materialStocking){
         try{
-            Material existingMaterial = materialRepository.findByMaterialID(material.getMaterialID());
-            if(existingMaterial==null){
+            MaterialStocking existingProductStocking = materialStockingRepository.findByProductStockingID(materialStocking.getProductStockingID());
+            if(existingProductStocking==null){
                 return responseService.formulateResponse(
                         null,
-                        "Material does not Exist",
+                        "Stock does not Exist",
                         HttpStatus.BAD_REQUEST,
                         null,
                         false
@@ -96,15 +105,23 @@ public class MaterialService {
             }
 
 
-            material.setName(material.getName().toUpperCase());
+            Material material = materialRepository.findByMaterialID(materialStocking.getMaterial().getMaterialID());
 
-            material.setMetric(material.getMetric().toUpperCase());
-
+            if(material==null){
+                return responseService.formulateResponse(
+                        null,
+                        "Material not found ",
+                        HttpStatus.NOT_FOUND,
+                        null,
+                        false
+                );
+            }
+            material.setRemainingQuantity(material.getRemainingQuantity().add(materialStocking.getQuantity()));
+            materialStockingRepository.save(materialStocking);
             materialRepository.save(material);
-
             return responseService.formulateResponse(
                     null,
-                    "Material updated successfully ",
+                    "Stock added successfully ",
                     HttpStatus.OK,
                     null,
                     true
@@ -113,7 +130,7 @@ public class MaterialService {
             log.error("Encountered Exception {}", exception.getMessage());
             return responseService.formulateResponse(
                     null,
-                    "Exception updating material ",
+                    "Exception updating stock ",
                     HttpStatus.BAD_REQUEST,
                     null,
                     false

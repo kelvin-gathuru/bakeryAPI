@@ -4,14 +4,13 @@ import com.threepmanagerapi.threepmanagerapi.client.model.Client;
 import com.threepmanagerapi.threepmanagerapi.client.repository.ClientRepository;
 import com.threepmanagerapi.threepmanagerapi.materials.model.Material;
 import com.threepmanagerapi.threepmanagerapi.materials.repository.MaterialRepository;
+import com.threepmanagerapi.threepmanagerapi.products.model.Product;
+import com.threepmanagerapi.threepmanagerapi.products.repository.ProductRepository;
 import com.threepmanagerapi.threepmanagerapi.region.model.Region;
 import com.threepmanagerapi.threepmanagerapi.region.repository.RegionRepository;
 import com.threepmanagerapi.threepmanagerapi.settings.Model.Status;
 import com.threepmanagerapi.threepmanagerapi.settings.service.JwtService;
 import com.threepmanagerapi.threepmanagerapi.settings.utility.ResponseService;
-import com.threepmanagerapi.threepmanagerapi.supplier.model.Supplier;
-import com.threepmanagerapi.threepmanagerapi.supplier.repository.SupplierRepository;
-import com.threepmanagerapi.threepmanagerapi.user.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,13 +22,12 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class AnalyticsService {
     @Autowired
-    private JwtService jwtService;
+    private ProductRepository productRepository;
     @Autowired
     private ResponseService responseService;
     @Autowired
@@ -52,6 +50,15 @@ public class AnalyticsService {
                     .sorted(Comparator.comparing(Material::getDateCreated).reversed())
                     .limit(3)
                     .toList();
+            List<Product> products = productRepository.findAll();
+
+            List<Product> latestProducts = products.stream().filter(
+                    product -> product.getDateCreated().isAfter(LocalDateTime.now().minusDays(1))).toList();
+
+            List<Product> bestPricedProducts = productRepository.findAll().stream()
+                    .sorted(Comparator.comparing(Product::getUnitPrice).reversed())
+                    .limit(3)
+                    .toList();
 
             Map<String, Object> response = new HashMap<>();
             response.put("clients", clients.size());
@@ -61,6 +68,9 @@ public class AnalyticsService {
             response.put("materials",materials.size());
             response.put("latestMaterials",latestMaterials.size());
             response.put("recentMaterials",recentMaterials);
+            response.put("bestPricedProducts",bestPricedProducts);
+            response.put("products",products.size());
+            response.put("latestProducts",latestProducts.size());
             return responseService.formulateResponse(
                     response,
                     "Analytics fetched successfully ",

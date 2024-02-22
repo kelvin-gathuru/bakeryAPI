@@ -1,6 +1,8 @@
-package com.threepmanagerapi.threepmanagerapi.materials.service;
+package com.threepmanagerapi.threepmanagerapi.products.service;
+
 import com.threepmanagerapi.threepmanagerapi.materials.model.Material;
-import com.threepmanagerapi.threepmanagerapi.materials.repository.MaterialRepository;
+import com.threepmanagerapi.threepmanagerapi.products.model.Product;
+import com.threepmanagerapi.threepmanagerapi.products.repository.ProductRepository;
 import com.threepmanagerapi.threepmanagerapi.settings.service.JwtService;
 import com.threepmanagerapi.threepmanagerapi.settings.utility.ResponseService;
 import com.threepmanagerapi.threepmanagerapi.user.repository.UserRepository;
@@ -12,11 +14,12 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+
 @Service
 @Slf4j
-public class MaterialService {
+public class ProductService {
     @Autowired
-    private MaterialRepository materialRepository;
+    private ProductRepository productRepository;
     @Autowired
     private JwtService jwtService;
     @Autowired
@@ -24,28 +27,28 @@ public class MaterialService {
     @Autowired
     private UserRepository userRepository;
 
-    public ResponseEntity createMaterial(String token, Material material){
+    public ResponseEntity createProduct(String token, Product product){
         try{
-            Material existingMaterial = materialRepository.findByName(material.getName());
+            Product existingProduct = productRepository.findByName(product.getName());
             Long userID = jwtService.extractuserID(token);
-            if(existingMaterial!=null){
+            if(existingProduct!=null){
                 return responseService.formulateResponse(
                         null,
-                        "Material Already Exists",
+                        "Product Already Exists",
                         HttpStatus.BAD_REQUEST,
                         null,
                         false
                 );
             }
 
-            material.setUser(userRepository.findByUserID(userID));
-            material.setMetric(material.getMetric().toUpperCase());
-            material.setName(material.getName().toUpperCase());
-            material.setDateCreated(LocalDateTime.now());
-            materialRepository.save(material);
+            product.setUser(userRepository.findByUserID(userID));
+            product.setName(product.getName().toUpperCase());
+            product.setMetric(product.getMetric().toUpperCase());
+            product.setDateCreated(LocalDateTime.now());
+            productRepository.save(product);
             return responseService.formulateResponse(
                     null,
-                    "Material added successfully ",
+                    "Product added successfully ",
                     HttpStatus.OK,
                     null,
                     true
@@ -54,19 +57,19 @@ public class MaterialService {
             log.error("Encountered Exception {}", exception.getMessage());
             return responseService.formulateResponse(
                     null,
-                    "Exception creating material ",
+                    "Exception creating product ",
                     HttpStatus.BAD_REQUEST,
                     null,
                     false
             );
         }
     }
-    public ResponseEntity getMaterials(){
+    public ResponseEntity getProducts(){
         try{
-            List<Material> materials = materialRepository.findAll();
+            List<Product> products = productRepository.findAll();
             return responseService.formulateResponse(
-                    materials,
-                    "Materials fetched successfully ",
+                    products,
+                    "Products fetched successfully ",
                     HttpStatus.OK,
                     null,
                     true
@@ -75,20 +78,20 @@ public class MaterialService {
             log.error("Encountered Exception {}", exception.getMessage());
             return responseService.formulateResponse(
                     null,
-                    "Exception fetching materials ",
+                    "Exception fetching products ",
                     HttpStatus.BAD_REQUEST,
                     null,
                     false
             );
         }
     }
-    public ResponseEntity updateMaterial(Material material){
+    public ResponseEntity updateProduct(Product product){
         try{
-            Material existingMaterial = materialRepository.findByMaterialID(material.getMaterialID());
-            if(existingMaterial==null){
+            Product existingProduct = productRepository.findByProductID(product.getProductID());
+            if(existingProduct==null){
                 return responseService.formulateResponse(
                         null,
-                        "Material does not Exist",
+                        "Product does not Exist",
                         HttpStatus.BAD_REQUEST,
                         null,
                         false
@@ -96,15 +99,15 @@ public class MaterialService {
             }
 
 
-            material.setName(material.getName().toUpperCase());
+            product.setName(product.getName().toUpperCase());
 
-            material.setMetric(material.getMetric().toUpperCase());
+            product.setMetric(product.getMetric().toUpperCase());
 
-            materialRepository.save(material);
+            productRepository.save(product);
 
             return responseService.formulateResponse(
                     null,
-                    "Material updated successfully ",
+                    "Product updated successfully ",
                     HttpStatus.OK,
                     null,
                     true
@@ -113,7 +116,7 @@ public class MaterialService {
             log.error("Encountered Exception {}", exception.getMessage());
             return responseService.formulateResponse(
                     null,
-                    "Exception updating material ",
+                    "Exception updating Product ",
                     HttpStatus.BAD_REQUEST,
                     null,
                     false
