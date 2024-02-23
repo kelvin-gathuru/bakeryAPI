@@ -20,6 +20,10 @@ public class MaterialController {
     public ResponseEntity getMaterial(@RequestHeader ("Authorization") String token) {
         return materialService.getMaterials();
     }
+    @GetMapping("/material/getLowOnStock")
+    public ResponseEntity getMaterialLowOnstock(@RequestHeader ("Authorization") String token) {
+        return materialService.getMaterialsLowOnStock();
+    }
     @PostMapping("/material/update")
     public ResponseEntity updateMaterial(@RequestHeader("Authorization") String token,
                                        @RequestBody Material material) {

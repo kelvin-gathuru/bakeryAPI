@@ -44,6 +44,9 @@ public class AnalyticsService {
             List<Region> regions = regionRepository.findAll();
             List<Region> activeRegions = regionRepository.findByStatus(Status.ACTIVE);
             List<Material> materials = materialRepository.findAll();
+            List<Material> materialsBelowReorderPoint = materials.stream()
+                    .filter(material -> material.getRemainingQuantity().compareTo(material.getReorderPoint()) < 0)
+                    .toList();
             List<Material> latestMaterials = materials.stream().filter(
                     material -> material.getDateCreated().isAfter(LocalDateTime.now().minusWeeks(1))).toList();
             List<Material> recentMaterials = materials.stream()
@@ -66,6 +69,7 @@ public class AnalyticsService {
             response.put("regions",regions.size());
             response.put("activeRegions",activeRegions.size());
             response.put("materials",materials.size());
+            response.put("materialsBelowReorderPoint",materialsBelowReorderPoint.size());
             response.put("latestMaterials",latestMaterials.size());
             response.put("recentMaterials",recentMaterials);
             response.put("bestPricedProducts",bestPricedProducts);

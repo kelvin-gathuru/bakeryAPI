@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 @Slf4j
 public class MaterialService {
@@ -66,6 +68,30 @@ public class MaterialService {
             List<Material> materials = materialRepository.findAll();
             return responseService.formulateResponse(
                     materials,
+                    "Materials fetched successfully ",
+                    HttpStatus.OK,
+                    null,
+                    true
+            );
+        } catch (Exception exception) {
+            log.error("Encountered Exception {}", exception.getMessage());
+            return responseService.formulateResponse(
+                    null,
+                    "Exception fetching materials ",
+                    HttpStatus.BAD_REQUEST,
+                    null,
+                    false
+            );
+        }
+    }
+    public ResponseEntity getMaterialsLowOnStock(){
+        try{
+            List<Material> materials = materialRepository.findAll();
+            List<Material> materialsBelowReorderPoint = materials.stream()
+                    .filter(material -> material.getRemainingQuantity().compareTo(material.getReorderPoint()) < 0)
+                    .toList();
+            return responseService.formulateResponse(
+                    materialsBelowReorderPoint,
                     "Materials fetched successfully ",
                     HttpStatus.OK,
                     null,

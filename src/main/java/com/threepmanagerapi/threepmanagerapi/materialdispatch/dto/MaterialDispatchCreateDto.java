@@ -1,9 +1,10 @@
-package com.threepmanagerapi.threepmanagerapi.productstocking.model;
+package com.threepmanagerapi.threepmanagerapi.materialdispatch.dto;
 
 import com.threepmanagerapi.threepmanagerapi.materials.model.Material;
 import com.threepmanagerapi.threepmanagerapi.supplier.model.Supplier;
 import com.threepmanagerapi.threepmanagerapi.user.model.User;
-import jakarta.persistence.*;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,20 +15,14 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
-public class MaterialStocking {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long productStockingID;
-    private BigDecimal quantity;
-    private LocalDateTime purchaseDate;
+public class MaterialDispatchCreateDto {
+    private Long materialDispatchID;
+    private BigDecimal initialQuantity;
+    private BigDecimal updatedQuantity;
+    private LocalDateTime dispatchDate;
     @OneToOne
     @JoinColumn(name="materialID")
     private Material material;
-    @OneToOne
-    @JoinColumn(name="supplierID")
-    private Supplier supplier;
-    @OneToOne
-    @JoinColumn(name="createdBy")
-    private User user;
+    private String shift;
+    private String description;
 }

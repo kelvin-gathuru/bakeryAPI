@@ -1,6 +1,5 @@
 package com.threepmanagerapi.threepmanagerapi.materials.model;
 
-import com.threepmanagerapi.threepmanagerapi.supplier.model.Supplier;
 import com.threepmanagerapi.threepmanagerapi.user.model.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

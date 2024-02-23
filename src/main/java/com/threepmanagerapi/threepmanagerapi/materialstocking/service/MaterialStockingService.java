@@ -1,9 +1,10 @@
-package com.threepmanagerapi.threepmanagerapi.productstocking.service;
+package com.threepmanagerapi.threepmanagerapi.materialstocking.service;
 
 import com.threepmanagerapi.threepmanagerapi.materials.model.Material;
 import com.threepmanagerapi.threepmanagerapi.materials.repository.MaterialRepository;
-import com.threepmanagerapi.threepmanagerapi.productstocking.model.MaterialStocking;
-import com.threepmanagerapi.threepmanagerapi.productstocking.repository.MaterialStockingRepository;
+import com.threepmanagerapi.threepmanagerapi.materialstocking.dto.MaterialStockUpdateDto;
+import com.threepmanagerapi.threepmanagerapi.materialstocking.model.MaterialStocking;
+import com.threepmanagerapi.threepmanagerapi.materialstocking.repository.MaterialStockingRepository;
 import com.threepmanagerapi.threepmanagerapi.settings.service.JwtService;
 import com.threepmanagerapi.threepmanagerapi.settings.utility.ResponseService;
 import com.threepmanagerapi.threepmanagerapi.supplier.repository.SupplierRepository;
@@ -50,6 +51,7 @@ public class MaterialStockingService {
             material.setRemainingQuantity(material.getRemainingQuantity().add(materialStocking.getQuantity()));
             materialStocking.setUser(userRepository.findByUserID(userID));
             materialStocking.setPurchaseDate(LocalDateTime.now());
+            materialStocking.setTotalPrice(materialStocking.getMaterial().getUnitPrice().multiply(materialStocking.getQuantity()));
             materialStockingRepository.save(materialStocking);
             materialRepository.save(material);
             return responseService.formulateResponse(
@@ -72,9 +74,9 @@ public class MaterialStockingService {
     }
     public ResponseEntity getMaterialStock(){
         try{
-            List<MaterialStocking> productStockings = materialStockingRepository.findAll();
+            List<MaterialStocking> materialStockings = materialStockingRepository.findAll();
             return responseService.formulateResponse(
-                    productStockings,
+                    materialStockings,
                     "Stock fetched successfully ",
                     HttpStatus.OK,
                     null,
@@ -91,10 +93,10 @@ public class MaterialStockingService {
             );
         }
     }
-    public ResponseEntity updateMaterialStock(MaterialStocking materialStocking){
+    public ResponseEntity updateMaterialStock(MaterialStockUpdateDto materialStockUpdateDto){
         try{
-            MaterialStocking existingProductStocking = materialStockingRepository.findByProductStockingID(materialStocking.getProductStockingID());
-            if(existingProductStocking==null){
+            MaterialStocking existingMaterialStocking = materialStockingRepository.findByMaterialStockID(materialStockUpdateDto.getMaterialStockID());
+            if(existingMaterialStocking==null){
                 return responseService.formulateResponse(
                         null,
                         "Stock does not Exist",
@@ -105,7 +107,7 @@ public class MaterialStockingService {
             }
 
 
-            Material material = materialRepository.findByMaterialID(materialStocking.getMaterial().getMaterialID());
+            Material material = materialRepository.findByMaterialID(materialStockUpdateDto.getMaterial().getMaterialID());
 
             if(material==null){
                 return responseService.formulateResponse(
@@ -116,12 +118,19 @@ public class MaterialStockingService {
                         false
                 );
             }
-            material.setRemainingQuantity(material.getRemainingQuantity().add(materialStocking.getQuantity()));
-            materialStockingRepository.save(materialStocking);
+            material.setRemainingQuantity((material.getRemainingQuantity().subtract(materialStockUpdateDto.getInitialQuantity()).add(materialStockUpdateDto.getUpdatedQuantity())));
+            existingMaterialStocking.setMaterial(materialStockUpdateDto.getMaterial());
+            existingMaterialStocking.setQuantity(materialStockUpdateDto.getUpdatedQuantity());
+            existingMaterialStocking.setSupplier(materialStockUpdateDto.getSupplier());
+            existingMaterialStocking.setPurchaseDate(LocalDateTime.now());
+            existingMaterialStocking.setUser(materialStockUpdateDto.getUser());
+            existingMaterialStocking.setDescription(materialStockUpdateDto.getDescription());
+            existingMaterialStocking.setTotalPrice(materialStockUpdateDto.getMaterial().getUnitPrice().multiply(materialStockUpdateDto.getUpdatedQuantity()));
+            materialStockingRepository.save(existingMaterialStocking);
             materialRepository.save(material);
             return responseService.formulateResponse(
                     null,
-                    "Stock added successfully ",
+                    "Stock UPDATED successfully ",
                     HttpStatus.OK,
                     null,
                     true
