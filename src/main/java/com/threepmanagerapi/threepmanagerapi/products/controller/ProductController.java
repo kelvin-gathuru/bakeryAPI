@@ -20,6 +20,10 @@ public class ProductController {
     public ResponseEntity getProduct(@RequestHeader ("Authorization") String token) {
         return productService.getProducts();
     }
+    @GetMapping("/product/getLowOnStock")
+    public ResponseEntity getProductLowOnstock(@RequestHeader ("Authorization") String token) {
+        return productService.getProductsLowOnStock();
+    }
     @PostMapping("/product/update")
     public ResponseEntity updateProduct(@RequestHeader("Authorization") String token,
                                          @RequestBody Product product) {

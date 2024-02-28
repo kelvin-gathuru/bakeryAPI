@@ -20,6 +20,9 @@ public class Product {
     private String name;
     private String metric;
     private BigDecimal unitPrice;
+    private BigDecimal reorderPoint;
+    private BigDecimal reorderQuantity;
+    private BigDecimal remainingQuantity;
     private LocalDateTime dateCreated;
     @OneToOne
     @JoinColumn(name="createdBy")

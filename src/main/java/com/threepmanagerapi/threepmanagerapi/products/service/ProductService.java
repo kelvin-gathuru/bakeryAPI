@@ -85,6 +85,30 @@ public class ProductService {
             );
         }
     }
+    public ResponseEntity getProductsLowOnStock(){
+        try{
+            List<Product> products = productRepository.findAll();
+            List<Product> productsBelowReorderPoint = products.stream()
+                    .filter(product -> product.getRemainingQuantity().compareTo(product.getReorderPoint()) < 0)
+                    .toList();
+            return responseService.formulateResponse(
+                    productsBelowReorderPoint,
+                    "Products fetched successfully ",
+                    HttpStatus.OK,
+                    null,
+                    true
+            );
+        } catch (Exception exception) {
+            log.error("Encountered Exception {}", exception.getMessage());
+            return responseService.formulateResponse(
+                    null,
+                    "Exception fetching Products ",
+                    HttpStatus.BAD_REQUEST,
+                    null,
+                    false
+            );
+        }
+    }
     public ResponseEntity updateProduct(Product product){
         try{
             Product existingProduct = productRepository.findByProductID(product.getProductID());

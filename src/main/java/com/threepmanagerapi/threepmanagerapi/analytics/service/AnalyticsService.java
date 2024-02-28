@@ -54,7 +54,9 @@ public class AnalyticsService {
                     .limit(3)
                     .toList();
             List<Product> products = productRepository.findAll();
-
+            List<Product> productsBelowReorderPoint = products.stream()
+                    .filter(product -> product.getRemainingQuantity().compareTo(product.getReorderPoint()) < 0)
+                    .toList();
             List<Product> latestProducts = products.stream().filter(
                     product -> product.getDateCreated().isAfter(LocalDateTime.now().minusDays(1))).toList();
 
@@ -74,6 +76,7 @@ public class AnalyticsService {
             response.put("recentMaterials",recentMaterials);
             response.put("bestPricedProducts",bestPricedProducts);
             response.put("products",products.size());
+            response.put("productsBelowReorderPoint",productsBelowReorderPoint.size());
             response.put("latestProducts",latestProducts.size());
             return responseService.formulateResponse(
                     response,
