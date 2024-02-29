@@ -19,17 +19,13 @@ public class ProductDispatch {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long productDispatchID;
     private String productDispatchCode;
-    private LocalDateTime dispatchDate;
     private BigDecimal fuelIssued;
     private BigDecimal cratesOut;
-    private BigDecimal totalPrice;
+    private BigDecimal totalDispatchPrice;
     private String vehicle;
     @OneToOne
     @JoinColumn(name="client")
     private Client client;
-    @OneToOne
-    @JoinColumn(name="createdBy")
-    private User user;
     @OneToMany(mappedBy = "dispatchedProductID", cascade = CascadeType.ALL)
     private List<DispatchedProducts> dispatchedProducts;
 }

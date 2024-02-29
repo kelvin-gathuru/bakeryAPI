@@ -18,12 +18,24 @@ public class DispatchedProducts {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long dispatchedProductID;
-    private BigDecimal dispatchedQuantity;
-    private BigDecimal dispatchPrice;
+    private BigDecimal quantity;
+    private BigDecimal remainingStock;
+    private BigDecimal totalPrice;
+//    @OneToOne
+//    @JoinColumn(name="product")
+//    private Product product;
+//    @ManyToOne
+//    @JoinColumn(name = "productDispatchCode")
+    private String productDispatchCode;
     @OneToOne
-    @JoinColumn(name="product")
-    private Product product;
-    @ManyToOne
-    @JoinColumn(name = "productDispatchCode") // This refers to the column name in the DispatchDetails table
-    private ProductDispatch productDispatch;
+    @JoinColumn(name="createdBy")
+    private User user;
+    private Long productID;
+    private String name;
+    private String metric;
+    private BigDecimal unitPrice;
+    private BigDecimal reorderPoint;
+    private BigDecimal reorderQuantity;
+    private BigDecimal remainingQuantity;
+    private LocalDateTime dateCreated;
 }

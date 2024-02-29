@@ -1,14 +1,10 @@
 package com.threepmanagerapi.threepmanagerapi.productdispatch.service;
 
-import com.threepmanagerapi.threepmanagerapi.materialdispatch.dto.MaterialDispatchCreateDto;
-import com.threepmanagerapi.threepmanagerapi.materialdispatch.model.MaterialDispatch;
-import com.threepmanagerapi.threepmanagerapi.materialdispatch.model.Shift;
-import com.threepmanagerapi.threepmanagerapi.materials.model.Material;
 import com.threepmanagerapi.threepmanagerapi.productdispatch.model.DispatchedProducts;
 import com.threepmanagerapi.threepmanagerapi.productdispatch.model.ProductDispatch;
 import com.threepmanagerapi.threepmanagerapi.productdispatch.repository.ProductDispatchRepository;
 import com.threepmanagerapi.threepmanagerapi.products.model.Product;
-import com.threepmanagerapi.threepmanagerapi.products.repository.DispatchedProductsRepository;
+import com.threepmanagerapi.threepmanagerapi.productdispatch.repository.DispatchedProductsRepository;
 import com.threepmanagerapi.threepmanagerapi.products.repository.ProductRepository;
 import com.threepmanagerapi.threepmanagerapi.settings.service.JwtService;
 import com.threepmanagerapi.threepmanagerapi.settings.utility.RandomCodeGenerator;
@@ -20,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -43,8 +40,18 @@ public class ProductDispatchService {
         try{
             Long userID = jwtService.extractuserID(token);
             String productDispatchCode = RandomCodeGenerator.generateRandomCode();
+            BigDecimal price = BigDecimal.valueOf(0);
             for(DispatchedProducts dispatchedProducts: productDispatch.getDispatchedProducts()){
-                Product product = productRepository.findByProductID((dispatchedProducts.getProduct().getProductID()));
+                Product product = productRepository.findByProductID((dispatchedProducts.getProductID()));
+                if(dispatchedProducts.getRemainingStock()==null){
+                    return responseService.formulateResponse(
+                            null,
+                            "A problem found in " + dispatchedProducts.getName()+ " Remove products not required",
+                            HttpStatus.NOT_FOUND,
+                            null,
+                            false
+                    );
+                }
                 if(product==null){
                     return responseService.formulateResponse(
                             null,
@@ -54,25 +61,19 @@ public class ProductDispatchService {
                             false
                     );
                 }
-                if(product.getRemainingQuantity().compareTo(dispatchedProducts.getProduct().getRemainingQuantity())<0){
-                    return responseService.formulateResponse(
-                            null,
-                            " Quantity not enough for " + product.getName(),
-                            HttpStatus.INTERNAL_SERVER_ERROR,
-                            null,
-                            false
-                    );
-                }
-                product.setRemainingQuantity(product.getRemainingQuantity().subtract(dispatchedProducts.getDispatchedQuantity()));
-                productRepository.save(product);
-                dispatchedProducts.setDispatchPrice(dispatchedProducts.getProduct().getUnitPrice().multiply(dispatchedProducts.getDispatchedQuantity()));
-                dispatchedProductsRepository.save(dispatchedProducts);
-            }
 
-            productDispatch.setUser(userRepository.findByUserID(userID));
+                product.setRemainingQuantity(dispatchedProducts.getRemainingStock());
+                productRepository.save(product);
+                dispatchedProducts.setDateCreated(LocalDateTime.now());
+                dispatchedProducts.setProductDispatchCode(productDispatchCode);
+                dispatchedProductsRepository.save(dispatchedProducts);
+                price = price.add(dispatchedProducts.getTotalPrice());
+            }
+            productDispatch.setTotalDispatchPrice(price);
+            productDispatch.setProductDispatchCode(productDispatchCode);
             productDispatchRepository.save(productDispatch);
             return responseService.formulateResponse(
-                    null,
+                    productDispatchCode,
                     "Dispatch done successfully ",
                     HttpStatus.OK,
                     null,
@@ -92,6 +93,10 @@ public class ProductDispatchService {
     public ResponseEntity getProductDispatch(){
         try{
             List<ProductDispatch> productDispatches = productDispatchRepository.findAll();
+            for (ProductDispatch productDispatch : productDispatches) {
+                List<DispatchedProducts> dispatchedProducts = dispatchedProductsRepository.findByProductDispatchCode(productDispatch.getProductDispatchCode());
+                productDispatch.setDispatchedProducts(dispatchedProducts);
+            }
             return responseService.formulateResponse(
                     productDispatches,
                     "Dispatches fetched successfully ",
