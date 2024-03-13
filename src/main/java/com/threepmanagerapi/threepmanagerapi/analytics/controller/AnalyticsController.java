@@ -17,4 +17,8 @@ public class AnalyticsController {
     public ResponseEntity getAnalytics(@RequestHeader("Authorization") String token) {
         return analyticsService.getAnalytics();
     }
+    @GetMapping("/salesAnalytics/get")
+    public ResponseEntity getsalesAnalytics(@RequestHeader("Authorization") String token) {
+        return analyticsService.getChartData();
+    }
 }

@@ -1,8 +1,12 @@
 package com.threepmanagerapi.threepmanagerapi.productdispatch.service;
 
+import com.threepmanagerapi.threepmanagerapi.materialstocking.model.MaterialStocking;
+import com.threepmanagerapi.threepmanagerapi.materialstocking.repository.MaterialStockingRepository;
+import com.threepmanagerapi.threepmanagerapi.materialstocking.specification.MaterialStockingSpecification;
 import com.threepmanagerapi.threepmanagerapi.productdispatch.model.DispatchedProducts;
 import com.threepmanagerapi.threepmanagerapi.productdispatch.model.ProductDispatch;
 import com.threepmanagerapi.threepmanagerapi.productdispatch.repository.ProductDispatchRepository;
+import com.threepmanagerapi.threepmanagerapi.productdispatch.specification.ProductDispatchSpecification;
 import com.threepmanagerapi.threepmanagerapi.products.model.Product;
 import com.threepmanagerapi.threepmanagerapi.productdispatch.repository.DispatchedProductsRepository;
 import com.threepmanagerapi.threepmanagerapi.products.repository.ProductRepository;
@@ -17,8 +21,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -35,11 +43,27 @@ public class ProductDispatchService {
     private UserRepository userRepository;
     @Autowired
     private DispatchedProductsRepository dispatchedProductsRepository;
+    @Autowired
+    private ProductDispatchSpecification productDispatchSpecification;
+    @Autowired
+    private MaterialStockingRepository materialStockingRepository;
+    @Autowired
+    private MaterialStockingSpecification materialStockingSpecification;
 
     public ResponseEntity createProductDispatch(String token, ProductDispatch productDispatch){
         try{
             Long userID = jwtService.extractuserID(token);
             String productDispatchCode = RandomCodeGenerator.generateRandomCode();
+            ProductDispatch existingProductDispatch = productDispatchRepository.findByProductDispatchCode(productDispatchCode);
+            if(existingProductDispatch!=null){
+                return responseService.formulateResponse(
+                        null,
+                        "A problem found occurred in generating code. Try Again...",
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        null,
+                        false
+                );
+            }
             BigDecimal price = BigDecimal.valueOf(0);
             for(DispatchedProducts dispatchedProducts: productDispatch.getDispatchedProducts()){
                 Product product = productRepository.findByProductID((dispatchedProducts.getProductID()));
@@ -66,11 +90,20 @@ public class ProductDispatchService {
                 productRepository.save(product);
                 dispatchedProducts.setDateCreated(LocalDateTime.now());
                 dispatchedProducts.setProductDispatchCode(productDispatchCode);
+                dispatchedProducts.setReturnedQuantity(BigDecimal.valueOf(0));
+                dispatchedProducts.setReturnedSpoiled(BigDecimal.valueOf(0));
+                dispatchedProducts.setSoldQuantity(dispatchedProducts.getQuantity());
+                dispatchedProducts.setSalesPrice(BigDecimal.valueOf(0));
                 dispatchedProductsRepository.save(dispatchedProducts);
                 price = price.add(dispatchedProducts.getTotalPrice());
             }
             productDispatch.setTotalDispatchPrice(price);
+            productDispatch.setBalance(BigDecimal.valueOf(0));
+            productDispatch.setTotalSalesPrice(BigDecimal.valueOf(0));
+            productDispatch.setCratesIn(BigDecimal.valueOf(0));
             productDispatch.setProductDispatchCode(productDispatchCode);
+            productDispatch.setReturned(false);
+            productDispatch.setDispatchDate(LocalDateTime.now());
             productDispatchRepository.save(productDispatch);
             return responseService.formulateResponse(
                     productDispatchCode,
@@ -90,12 +123,68 @@ public class ProductDispatchService {
             );
         }
     }
+
+    public ResponseEntity createProductDispatchReturn(ProductDispatch productDispatch){
+        try{
+            ProductDispatch existingProductDispatch = productDispatchRepository.findByProductDispatchCode(productDispatch.getProductDispatchCode());
+            if(existingProductDispatch==null){
+                return responseService.formulateResponse(
+                        null,
+                        "A problem found occurred in getting dispatch. Try Again...",
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        null,
+                        false
+                );
+            }
+            for(DispatchedProducts dispatchedProducts: productDispatch.getDispatchedProducts()){
+                DispatchedProducts existingDispatchedProduct = dispatchedProductsRepository.findByDispatchedProductID(dispatchedProducts.getDispatchedProductID());
+                Product product = productRepository.findByProductID((existingDispatchedProduct.getProductID()));
+                product.setRemainingQuantity(product.getRemainingQuantity().add(dispatchedProducts.getReturnedQuantity()));
+                productRepository.save(product);
+                existingDispatchedProduct.setReturnedQuantity(dispatchedProducts.getReturnedQuantity());
+                existingDispatchedProduct.setReturnedSpoiled(dispatchedProducts.getReturnedSpoiled());
+                existingDispatchedProduct.setSoldQuantity(dispatchedProducts.getSoldQuantity());
+                existingDispatchedProduct.setSalesPrice(dispatchedProducts.getSalesPrice());
+                dispatchedProductsRepository.save(existingDispatchedProduct);
+            }
+
+            existingProductDispatch.setBalance(productDispatch.getBalance());
+            existingProductDispatch.setTotalSalesPrice(productDispatch.getTotalSalesPrice());
+            existingProductDispatch.setCratesIn(productDispatch.getCratesIn());
+            existingProductDispatch.setAmountPaid(productDispatch.getAmountPaid());
+            existingProductDispatch.setReturnedDate(LocalDateTime.now());
+            existingProductDispatch.setPaymentMode(productDispatch.getPaymentMode());
+            existingProductDispatch.setReturned(true);
+            productDispatchRepository.save(existingProductDispatch);
+            return responseService.formulateResponse(
+                    null,
+                    "Dispatch Return done successfully ",
+                    HttpStatus.OK,
+                    null,
+                    true
+            );
+        } catch (Exception exception) {
+            log.error("Encountered Exception {}", exception.getMessage());
+            return responseService.formulateResponse(
+                    null,
+                    "Exception returning material ",
+                    HttpStatus.BAD_REQUEST,
+                    null,
+                    false
+            );
+        }
+    }
     public ResponseEntity getProductDispatch(){
         try{
-            List<ProductDispatch> productDispatches = productDispatchRepository.findAll();
+            List<ProductDispatch> productDispatches = productDispatchRepository.findByReturned(false);
             for (ProductDispatch productDispatch : productDispatches) {
                 List<DispatchedProducts> dispatchedProducts = dispatchedProductsRepository.findByProductDispatchCode(productDispatch.getProductDispatchCode());
+                for(DispatchedProducts dispatchedProducts1: dispatchedProducts){
+                    dispatchedProducts1.setSalesPrice(dispatchedProducts1.getUnitPrice().multiply(dispatchedProducts1.getQuantity()));
+                }
                 productDispatch.setDispatchedProducts(dispatchedProducts);
+                Duration duration = Duration.between(LocalDateTime.now(),productDispatch.getDispatchDate());
+                productDispatch.setOverdueDays(Math.abs(duration.toDays()));
             }
             return responseService.formulateResponse(
                     productDispatches,
@@ -109,6 +198,71 @@ public class ProductDispatchService {
             return responseService.formulateResponse(
                     null,
                     "Exception fetching dispatches ",
+                    HttpStatus.BAD_REQUEST,
+                    null,
+                    false
+            );
+        }
+    }
+    public ResponseEntity getProductDispatchReturn(String startDate, String endDate){
+        try{
+            List<ProductDispatch> productDispatches = productDispatchRepository.findAll(productDispatchSpecification.getProductDispatchReturned(startDate, endDate));
+            for (ProductDispatch productDispatch : productDispatches) {
+                List<DispatchedProducts> dispatchedProducts = dispatchedProductsRepository.findByProductDispatchCode(productDispatch.getProductDispatchCode());
+                productDispatch.setDispatchedProducts(dispatchedProducts);
+                Duration duration = Duration.between(productDispatch.getReturnedDate(),productDispatch.getDispatchDate());
+                productDispatch.setDaysTaken(Math.abs(duration.toDays()));
+            }
+            return responseService.formulateResponse(
+                    productDispatches,
+                    "Dispatch Returns fetched successfully ",
+                    HttpStatus.OK,
+                    null,
+                    true
+            );
+        } catch (Exception exception) {
+            log.error("Encountered Exception {}", exception.getMessage());
+            return responseService.formulateResponse(
+                    null,
+                    "Exception fetching dispatch returns ",
+                    HttpStatus.BAD_REQUEST,
+                    null,
+                    false
+            );
+        }
+    }
+
+    public ResponseEntity getIngredientVsProduct(String startDate, String endDate){
+        try{
+            List<ProductDispatch> productDispatches = productDispatchRepository.findAll(productDispatchSpecification.getProductDispatchReturned(startDate, endDate));
+            List<Object> objects = new ArrayList<>();
+            BigDecimal total = BigDecimal.valueOf(0);
+            for (ProductDispatch productDispatch : productDispatches) {
+                List<DispatchedProducts> dispatchedProducts = dispatchedProductsRepository.findByProductDispatchCode(productDispatch.getProductDispatchCode());
+                productDispatch.setDispatchedProducts(dispatchedProducts);
+                total = total.add(productDispatch.getAmountPaid());
+                for(DispatchedProducts dispatchedProducts1: dispatchedProducts){
+                    dispatchedProducts1.setSaleDate(productDispatch.getReturnedDate());
+                    dispatchedProducts1.setTotalSalesForRetrieval(total);
+                }
+                objects.add(dispatchedProducts);
+            }
+            List<MaterialStocking> materialStockings = materialStockingRepository.findAll(materialStockingSpecification.getMaterialStocking(startDate, endDate));
+            HashMap<String, List> map = new HashMap<>();
+            map.put("materials", materialStockings);
+            map.put("products", objects);
+            return responseService.formulateResponse(
+                    map,
+                    "Dispatch Returns fetched successfully ",
+                    HttpStatus.OK,
+                    null,
+                    true
+            );
+        } catch (Exception exception) {
+            log.error("Encountered Exception {}", exception.getMessage());
+            return responseService.formulateResponse(
+                    null,
+                    "Exception fetching dispatch returns ",
                     HttpStatus.BAD_REQUEST,
                     null,
                     false

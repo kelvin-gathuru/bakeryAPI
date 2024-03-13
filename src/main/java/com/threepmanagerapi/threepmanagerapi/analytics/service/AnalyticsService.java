@@ -1,9 +1,12 @@
 package com.threepmanagerapi.threepmanagerapi.analytics.service;
 
+import com.threepmanagerapi.threepmanagerapi.analytics.dto.SalesDataDto;
 import com.threepmanagerapi.threepmanagerapi.client.model.Client;
 import com.threepmanagerapi.threepmanagerapi.client.repository.ClientRepository;
 import com.threepmanagerapi.threepmanagerapi.materials.model.Material;
 import com.threepmanagerapi.threepmanagerapi.materials.repository.MaterialRepository;
+import com.threepmanagerapi.threepmanagerapi.productdispatch.model.ProductDispatch;
+import com.threepmanagerapi.threepmanagerapi.productdispatch.repository.ProductDispatchRepository;
 import com.threepmanagerapi.threepmanagerapi.products.model.Product;
 import com.threepmanagerapi.threepmanagerapi.products.repository.ProductRepository;
 import com.threepmanagerapi.threepmanagerapi.region.model.Region;
@@ -17,11 +20,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -36,6 +37,9 @@ public class AnalyticsService {
     private RegionRepository regionRepository;
     @Autowired
     private ClientRepository clientRepository;
+    @Autowired
+    private ProductDispatchRepository productDispatchRepository;
+
 
     public ResponseEntity getAnalytics(){
         try{
@@ -86,6 +90,53 @@ public class AnalyticsService {
                     true
             );
         } catch (Exception exception) {
+            log.error("Encountered Exception {}", exception.getMessage());
+            return responseService.formulateResponse(
+                    null,
+                    "Exception fetching analytics ",
+                    HttpStatus.BAD_REQUEST,
+                    null,
+                    false
+            );
+        }
+    }
+    public ResponseEntity getChartData(){
+        try {
+            LocalDateTime endDate = LocalDateTime.now();
+            LocalDateTime startDate = endDate.minusDays(6);
+            List<SalesDataDto> salesDataDtos = new ArrayList<>();
+
+            List<ProductDispatch> productDispatches = productDispatchRepository.findByReturnedDateBetween(startDate, endDate).stream().filter(
+                    ProductDispatch::isReturned).toList();
+
+            for(ProductDispatch productDispatch: productDispatches){
+                SalesDataDto salesDataDto = new SalesDataDto();
+                salesDataDto.setDay(productDispatch.getReturnedDate().getDayOfWeek().toString());
+                salesDataDto.setAmount(productDispatch.getAmountPaid());
+                salesDataDtos.add(salesDataDto);
+            }
+            for (int i = 0; i < 7; i++) {
+                SalesDataDto salesDataDto2 = new SalesDataDto();
+                salesDataDto2.setDay(endDate.getDayOfWeek().toString());
+                salesDataDto2.setAmount(BigDecimal.valueOf(0));
+                salesDataDtos.add(salesDataDto2);
+                endDate = endDate.minusDays(1);
+            }
+
+            Map<String, BigDecimal> totals = new HashMap<>();
+            for (SalesDataDto salesDataDtos1: salesDataDtos) {
+                String day = (String) salesDataDtos1.getDay();
+                BigDecimal amount = (BigDecimal) salesDataDtos1.getAmount();
+                totals.put(day, totals.getOrDefault(day, BigDecimal.valueOf(0.0)).add(amount));
+            }
+            return responseService.formulateResponse(
+                    totals,
+                    "Success fetching sales analytics ",
+                    HttpStatus.OK,
+                    null,
+                    true
+            );
+        }catch (Exception exception) {
             log.error("Encountered Exception {}", exception.getMessage());
             return responseService.formulateResponse(
                     null,

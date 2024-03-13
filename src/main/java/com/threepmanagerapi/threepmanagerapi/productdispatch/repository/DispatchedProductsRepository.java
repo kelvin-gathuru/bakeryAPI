@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface DispatchedProductsRepository extends JpaRepository<DispatchedProducts,Long> {
-    List<DispatchedProducts> findByDispatchedProductID(Long id);
+//    List<DispatchedProducts> findByDispatchedProductID(Long id);
     List<DispatchedProducts> findByProductDispatchCode(String code);
+
+    DispatchedProducts findByDispatchedProductID(Long Id);
 }

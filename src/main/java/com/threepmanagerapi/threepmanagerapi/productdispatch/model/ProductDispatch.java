@@ -21,11 +21,21 @@ public class ProductDispatch {
     private String productDispatchCode;
     private BigDecimal fuelIssued;
     private BigDecimal cratesOut;
+    private BigDecimal cratesIn;
     private BigDecimal totalDispatchPrice;
+    private BigDecimal totalSalesPrice;
+    private BigDecimal amountPaid;
+    private BigDecimal balance;
     private String vehicle;
+    private String paymentMode;
     @OneToOne
     @JoinColumn(name="client")
     private Client client;
     @OneToMany(mappedBy = "dispatchedProductID", cascade = CascadeType.ALL)
     private List<DispatchedProducts> dispatchedProducts;
+    private boolean returned;
+    private LocalDateTime returnedDate;
+    private LocalDateTime dispatchDate;
+    private Long overdueDays;
+    private Long daysTaken;
 }

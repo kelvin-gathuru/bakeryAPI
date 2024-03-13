@@ -21,6 +21,10 @@ public class DispatchedProducts {
     private BigDecimal quantity;
     private BigDecimal remainingStock;
     private BigDecimal totalPrice;
+    private BigDecimal returnedQuantity;
+    private BigDecimal returnedSpoiled;
+    private BigDecimal soldQuantity;
+    private BigDecimal salesPrice;
 //    @OneToOne
 //    @JoinColumn(name="product")
 //    private Product product;
@@ -38,4 +42,6 @@ public class DispatchedProducts {
     private BigDecimal reorderQuantity;
     private BigDecimal remainingQuantity;
     private LocalDateTime dateCreated;
+    private LocalDateTime saleDate;
+    private  BigDecimal totalSalesForRetrieval;
 }

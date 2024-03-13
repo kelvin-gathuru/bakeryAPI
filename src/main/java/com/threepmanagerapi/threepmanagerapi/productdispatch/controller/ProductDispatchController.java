@@ -17,8 +17,25 @@ public class ProductDispatchController {
                                                  @RequestBody ProductDispatch productDispatch) {
         return productDispatchService.createProductDispatch(token, productDispatch);
     }
+    @PostMapping("/productDispatchReturn/create")
+    public ResponseEntity createProductDispatchReturn(@RequestHeader("Authorization") String token,
+                                                @RequestBody ProductDispatch productDispatch) {
+        return productDispatchService.createProductDispatchReturn(productDispatch);
+    }
     @GetMapping("/productDispatch/get")
     public ResponseEntity getProductDispatch(@RequestHeader ("Authorization") String token) {
         return productDispatchService.getProductDispatch();
+    }
+    @GetMapping("/productDispatchReturn/get")
+    public ResponseEntity getProductDispatchReturn(@RequestHeader ("Authorization") String token,
+                                                   @RequestParam(name = "startDate",required = false) String startDate,
+                                                   @RequestParam(name = "endDate",required = false) String endDate) {
+        return productDispatchService.getProductDispatchReturn(startDate, endDate);
+    }
+    @GetMapping("/ingredientVsProduct/get")
+    public ResponseEntity getIngredientVsProduct(@RequestHeader ("Authorization") String token,
+                                                   @RequestParam(name = "startDate",required = false) String startDate,
+                                                   @RequestParam(name = "endDate",required = false) String endDate) {
+        return productDispatchService.getIngredientVsProduct(startDate, endDate);
     }
 }
