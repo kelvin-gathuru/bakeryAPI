@@ -18,6 +18,7 @@ public class Client {
     private Long clientID;
     private String name;
     private String phone;
+    private String email;
     @Enumerated(EnumType.STRING)
     private SalesType salesType;
     @Enumerated(EnumType.STRING)

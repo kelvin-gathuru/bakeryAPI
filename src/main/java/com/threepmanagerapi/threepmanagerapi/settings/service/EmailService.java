@@ -81,4 +81,64 @@ public class EmailService {
         }
     }
 
+    public void sendProductDispatchCode(String email, String productDispatchCode, String date){
+        String details = "::Dispatch Code: " + productDispatchCode + "  ::DateTime: " + date;
+        String payload = "{\"notificationCode\":\"PMANAGER-EMAIL\"," +
+                "\"clientID\":1," +
+                "\"message\":\"Hello Agent! This is your Dispatch details! It is recommended that you don't loose this email before dispatch return! " + details + "\"," +
+                "\"subject\":\"Bakery Manager Dispatch Code\"," +
+                "\"recepient\":\"" + email + "\"," +
+                "\"cCrecepients\":\"\"," +
+                "\"bCCrecepients\":\"\"," +
+                "\"type\":\"text/html\"}";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // Create the request entity
+        HttpEntity<String> entity = new HttpEntity<>(payload, headers);
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> response = restTemplate.exchange(
+                emailApiUrl,
+                HttpMethod.POST,
+                entity,
+                String.class
+        );
+        if (response.getStatusCode() == HttpStatus.OK) {
+            log.info("Email sent successfully");
+        } else {
+            log.info("Email not Sent");
+        }
+
+    }
+
+    public void sendProductDispatchReturn(String email, String productDispatchCode, String date, String amount, String balance){
+        String details = "::Amount Paid: KSh. " + amount + "  ::Balance: KSh. " + balance;
+        String payload = "{\"notificationCode\":\"PMANAGER-EMAIL\"," +
+                "\"clientID\":1," +
+                "\"message\":\"Hello Agent! Your Dispatch of Code: "+ productDispatchCode+ "Has been returned on: " + date +". These are the details: " + details + "\"," +
+                "\"subject\":\"Bakery Manager Dispatch Return\"," +
+                "\"recepient\":\"" + email + "\"," +
+                "\"cCrecepients\":\"\"," +
+                "\"bCCrecepients\":\"\"," +
+                "\"type\":\"text/html\"}";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // Create the request entity
+        HttpEntity<String> entity = new HttpEntity<>(payload, headers);
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> response = restTemplate.exchange(
+                emailApiUrl,
+                HttpMethod.POST,
+                entity,
+                String.class
+        );
+        if (response.getStatusCode() == HttpStatus.OK) {
+            log.info("Email sent successfully");
+        } else {
+            log.info("Email not Sent");
+        }
+
+    }
+
 }

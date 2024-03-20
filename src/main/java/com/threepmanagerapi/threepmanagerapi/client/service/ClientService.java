@@ -38,11 +38,21 @@ public class ClientService {
     public ResponseEntity createClient(String token, CreateClientDto createClientDto){
         try{
             Optional<Client> existingClient = clientRepository.findByPhone(createClientDto.getPhone());
+            Optional<Client> existingClient1 = clientRepository.findByEmail(createClientDto.getEmail());
             Long userID = jwtService.extractuserID(token);
             if(existingClient.isPresent()){
                 return responseService.formulateResponse(
                         null,
                         "Phone Number Already Exists",
+                        HttpStatus.BAD_REQUEST,
+                        null,
+                        false
+                );
+            }
+            if(existingClient1.isPresent()){
+                return responseService.formulateResponse(
+                        null,
+                        "Email Already Exists",
                         HttpStatus.BAD_REQUEST,
                         null,
                         false
@@ -66,6 +76,7 @@ public class ClientService {
             client.setPhone(createClientDto.getPhone());
             client.setUser(userRepository.findByUserID(userID));
             client.setRegion(region);
+            client.setEmail(createClientDto.getEmail());
             client.setRegistrationType(RegistrationType.valueOf(createClientDto.getRegistrationType()));
             client.setSalesType(SalesType.valueOf(createClientDto.getSalesType()));
             client.setStatus(Status.valueOf(createClientDto.getStatus()));
@@ -158,8 +169,6 @@ public class ClientService {
     public ResponseEntity updateClient(Client client){
         try{
             Client existingClient = clientRepository.findByClientID(client.getClientID());
-            System.out.println(client);
-            System.out.println(existingClient);
             if(existingClient==null){
                 return responseService.formulateResponse(
                         null,

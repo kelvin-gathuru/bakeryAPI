@@ -1,9 +1,0 @@
-Manifest-Version: 1.0
-Created-By: IntelliJ IDEA
-Built-By: wambu
-Build-Jdk: 17.0.8
-Implementation-Title: bakery-manager-api
-Implementation-Version: 0.0.1-SNAPSHOT
-Implementation-Vendor-Id: com.threep-manager-api
-Main-Class: ${start-class}
-

@@ -10,6 +10,7 @@ import com.threepmanagerapi.threepmanagerapi.productdispatch.specification.Produ
 import com.threepmanagerapi.threepmanagerapi.products.model.Product;
 import com.threepmanagerapi.threepmanagerapi.productdispatch.repository.DispatchedProductsRepository;
 import com.threepmanagerapi.threepmanagerapi.products.repository.ProductRepository;
+import com.threepmanagerapi.threepmanagerapi.settings.service.EmailService;
 import com.threepmanagerapi.threepmanagerapi.settings.service.JwtService;
 import com.threepmanagerapi.threepmanagerapi.settings.utility.RandomCodeGenerator;
 import com.threepmanagerapi.threepmanagerapi.settings.utility.ResponseService;
@@ -49,12 +50,31 @@ public class ProductDispatchService {
     private MaterialStockingRepository materialStockingRepository;
     @Autowired
     private MaterialStockingSpecification materialStockingSpecification;
+    @Autowired
+    private EmailService emailService;
 
     public ResponseEntity createProductDispatch(String token, ProductDispatch productDispatch){
         try{
             Long userID = jwtService.extractuserID(token);
             String productDispatchCode = RandomCodeGenerator.generateRandomCode();
             ProductDispatch existingProductDispatch = productDispatchRepository.findByProductDispatchCode(productDispatchCode);
+            List<ProductDispatch> productDispatchList = productDispatchRepository.findByClient(productDispatch.getClient());
+            boolean clientHasUnreturned = false;
+            for(ProductDispatch prod: productDispatchList){
+                if (!prod.isReturned()) {
+                    clientHasUnreturned = true;
+                    break;
+                }
+            }
+            if(clientHasUnreturned){
+                return responseService.formulateResponse(
+                        null,
+                        "The Agent has an Unreturned Dispatch...Select Another Client or wait for Dispatch Return..",
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        null,
+                        false
+                );
+            }
             if(existingProductDispatch!=null){
                 return responseService.formulateResponse(
                         null,
@@ -105,6 +125,7 @@ public class ProductDispatchService {
             productDispatch.setReturned(false);
             productDispatch.setDispatchDate(LocalDateTime.now());
             productDispatchRepository.save(productDispatch);
+            emailService.sendProductDispatchCode(productDispatch.getClient().getEmail(),productDispatchCode,LocalDateTime.now().toString());
             return responseService.formulateResponse(
                     productDispatchCode,
                     "Dispatch done successfully ",
@@ -156,6 +177,7 @@ public class ProductDispatchService {
             existingProductDispatch.setPaymentMode(productDispatch.getPaymentMode());
             existingProductDispatch.setReturned(true);
             productDispatchRepository.save(existingProductDispatch);
+            emailService.sendProductDispatchReturn(existingProductDispatch.getClient().getEmail(),existingProductDispatch.getProductDispatchCode(),LocalDateTime.now().toString(),productDispatch.getAmountPaid().toString(),productDispatch.getBalance().toString() );
             return responseService.formulateResponse(
                     null,
                     "Dispatch Return done successfully ",
