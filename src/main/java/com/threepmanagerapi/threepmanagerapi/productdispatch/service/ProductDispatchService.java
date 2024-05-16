@@ -126,6 +126,7 @@ public class ProductDispatchService {
             productDispatch.setDispatchDate(LocalDateTime.now());
             productDispatchRepository.save(productDispatch);
             emailService.sendProductDispatchCode(productDispatch.getClient().getEmail(),productDispatchCode,LocalDateTime.now().toString());
+            emailService.sendProductDispatchCodeSms(productDispatch.getClient().getPhone(),productDispatchCode,LocalDateTime.now().toString());
             return responseService.formulateResponse(
                     productDispatchCode,
                     "Dispatch done successfully ",
@@ -178,6 +179,7 @@ public class ProductDispatchService {
             existingProductDispatch.setReturned(true);
             productDispatchRepository.save(existingProductDispatch);
             emailService.sendProductDispatchReturn(existingProductDispatch.getClient().getEmail(),existingProductDispatch.getProductDispatchCode(),LocalDateTime.now().toString(),productDispatch.getAmountPaid().toString(),productDispatch.getBalance().toString() );
+            emailService.sendProductDispatchReturnSms(existingProductDispatch.getClient().getPhone(), existingProductDispatch.getProductDispatchCode(), LocalDateTime.now().toString(),productDispatch.getAmountPaid().toString(),productDispatch.getBalance().toString());
             return responseService.formulateResponse(
                     null,
                     "Dispatch Return done successfully ",

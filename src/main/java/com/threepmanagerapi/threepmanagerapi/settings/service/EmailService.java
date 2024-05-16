@@ -111,6 +111,36 @@ public class EmailService {
 
     }
 
+    public void sendProductDispatchCodeSms(String phoneNumber, String productDispatchCode, String date){
+        String details = "::Dispatch Code: " + productDispatchCode + "  ::DateTime: " + date;
+        String payload = "{\"notificationCode\":\"PMANAGER-SMS\"," +
+                "\"clientID\":1," +
+                "\"message\":\"Hello Agent! This is your Dispatch details! It is recommended that you don't loose this SMS before dispatch return! " + details + "\"," +
+                "\"subject\":\"Bakery Manager Dispatch Code\"," +
+                "\"recepient\":\"" +0+phoneNumber+ "\"," +
+                "\"cCrecepients\":\"\"," +
+                "\"bCCrecepients\":\"\"," +
+                "\"type\":\"text\"}";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // Create the request entity
+        HttpEntity<String> entity = new HttpEntity<>(payload, headers);
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> response = restTemplate.exchange(
+                emailApiUrl,
+                HttpMethod.POST,
+                entity,
+                String.class
+        );
+        if (response.getStatusCode() == HttpStatus.OK) {
+            log.info("SMS sent successfully");
+        } else {
+            log.info("SMS not Sent");
+        }
+
+    }
+
     public void sendProductDispatchReturn(String email, String productDispatchCode, String date, String amount, String balance){
         String details = "::Amount Paid: KSh. " + amount + "  ::Balance: KSh. " + balance;
         String payload = "{\"notificationCode\":\"PMANAGER-EMAIL\"," +
@@ -135,8 +165,38 @@ public class EmailService {
         );
         if (response.getStatusCode() == HttpStatus.OK) {
             log.info("Email sent successfully");
+
         } else {
             log.info("Email not Sent");
+        }
+
+    }
+    public void sendProductDispatchReturnSms(String phone, String productDispatchCode, String date, String amount, String balance){
+        String details = "::Amount Paid: KSh. " + amount + "  ::Balance: KSh. " + balance;
+        String payload = "{\"notificationCode\":\"PMANAGER-SMS\"," +
+                "\"clientID\":1," +
+                "\"message\":\"Hello Agent! Your Dispatch of Code: "+ productDispatchCode+ "Has been returned on: " + date +". These are the details: " + details + "\"," +
+                "\"subject\":\"Bakery Manager Dispatch Return\"," +
+                "\"recepient\":\"" +0+phone+ "\"," +
+                "\"cCrecepients\":\"\"," +
+                "\"bCCrecepients\":\"\"," +
+                "\"type\":\"text/html\"}";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // Create the request entity
+        HttpEntity<String> entity = new HttpEntity<>(payload, headers);
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<String> response = restTemplate.exchange(
+                emailApiUrl,
+                HttpMethod.POST,
+                entity,
+                String.class
+        );
+        if (response.getStatusCode() == HttpStatus.OK) {
+            log.info("SMS sent successfully");
+        } else {
+            log.info("SMS not Sent");
         }
 
     }
