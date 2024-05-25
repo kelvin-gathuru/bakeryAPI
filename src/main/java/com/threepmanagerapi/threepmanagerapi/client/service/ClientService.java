@@ -1,5 +1,7 @@
 package com.threepmanagerapi.threepmanagerapi.client.service;
+import com.threepmanagerapi.threepmanagerapi.client.dto.CratesDto;
 import com.threepmanagerapi.threepmanagerapi.client.dto.CreateClientDto;
+import com.threepmanagerapi.threepmanagerapi.client.dto.DebtDto;
 import com.threepmanagerapi.threepmanagerapi.client.model.ArchivedClient;
 import com.threepmanagerapi.threepmanagerapi.client.model.Client;
 import com.threepmanagerapi.threepmanagerapi.client.model.RegistrationType;
@@ -17,6 +19,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -80,6 +84,11 @@ public class ClientService {
             client.setRegistrationType(RegistrationType.valueOf(createClientDto.getRegistrationType()));
             client.setSalesType(SalesType.valueOf(createClientDto.getSalesType()));
             client.setStatus(Status.valueOf(createClientDto.getStatus()));
+            client.setCumulativeAmountToPay(BigDecimal.valueOf(0));
+            client.setCumulativeAmountPaid(BigDecimal.valueOf(0));
+            client.setCumulativeAmountBalance(BigDecimal.valueOf(0));
+            client.setCumulativeCratesIn(BigDecimal.valueOf(0));
+            client.setCumulativeCratesOut(BigDecimal.valueOf(0));
 
             clientRepository.save(client);
             return responseService.formulateResponse(
@@ -201,6 +210,72 @@ public class ClientService {
             return responseService.formulateResponse(
                     null,
                     "Exception updating client ",
+                    HttpStatus.BAD_REQUEST,
+                    null,
+                    false
+            );
+        }
+    }
+    public ResponseEntity returnCrates(CratesDto cratesDto){
+        try{
+            Client existingClient = clientRepository.findByClientID(cratesDto.getClientID());
+            if(existingClient==null){
+                return responseService.formulateResponse(
+                        null,
+                        "Client does not Exist",
+                        HttpStatus.BAD_REQUEST,
+                        null,
+                        false
+                );
+            }
+            existingClient.setCumulativeCratesIn(existingClient.getCumulativeCratesIn().add(cratesDto.getCrates()));
+            clientRepository.save(existingClient);
+            return responseService.formulateResponse(
+                    null,
+                    "Crates returned successfully ",
+                    HttpStatus.OK,
+                    null,
+                    true
+            );
+        } catch (Exception exception) {
+            log.error("Encountered Exception {}", exception.getMessage());
+            return responseService.formulateResponse(
+                    null,
+                    "Exception returning crates ",
+                    HttpStatus.BAD_REQUEST,
+                    null,
+                    false
+            );
+        }
+    }
+    public ResponseEntity payDebt(DebtDto debtDto){
+        try{
+            Client existingClient = clientRepository.findByClientID(debtDto.getClientID());
+            if(existingClient==null){
+                return responseService.formulateResponse(
+                        null,
+                        "Client does not Exist",
+                        HttpStatus.BAD_REQUEST,
+                        null,
+                        false
+                );
+            }
+//            existingClient.setCumulativeAmountToPay(existingClient.getCumulativeAmountToPay().subtract(debtDto.getAmount()));
+            existingClient.setCumulativeAmountPaid(existingClient.getCumulativeAmountPaid().add(debtDto.getAmount()));
+            existingClient.setCumulativeAmountBalance(existingClient.getCumulativeAmountBalance().subtract(debtDto.getAmount()));
+            clientRepository.save(existingClient);
+            return responseService.formulateResponse(
+                    null,
+                    "Payment successful ",
+                    HttpStatus.OK,
+                    null,
+                    true
+            );
+        } catch (Exception exception) {
+            log.error("Encountered Exception {}", exception.getMessage());
+            return responseService.formulateResponse(
+                    null,
+                    "Exception making payment ",
                     HttpStatus.BAD_REQUEST,
                     null,
                     false

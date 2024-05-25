@@ -8,6 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -31,4 +33,9 @@ public class Client {
     @OneToOne
     @JoinColumn(name = "userID")
     private User user;
+    private BigDecimal cumulativeAmountToPay;
+    private BigDecimal cumulativeAmountPaid;
+    private BigDecimal cumulativeAmountBalance;
+    private BigDecimal cumulativeCratesOut;
+    private BigDecimal cumulativeCratesIn;
 }

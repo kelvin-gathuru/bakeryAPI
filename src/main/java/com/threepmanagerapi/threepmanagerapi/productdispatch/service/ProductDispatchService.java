@@ -1,8 +1,11 @@
 package com.threepmanagerapi.threepmanagerapi.productdispatch.service;
 
+import com.threepmanagerapi.threepmanagerapi.client.model.Client;
+import com.threepmanagerapi.threepmanagerapi.client.repository.ClientRepository;
 import com.threepmanagerapi.threepmanagerapi.materialstocking.model.MaterialStocking;
 import com.threepmanagerapi.threepmanagerapi.materialstocking.repository.MaterialStockingRepository;
 import com.threepmanagerapi.threepmanagerapi.materialstocking.specification.MaterialStockingSpecification;
+import com.threepmanagerapi.threepmanagerapi.mpesaintegration.service.MpesaIntegrationService;
 import com.threepmanagerapi.threepmanagerapi.productdispatch.model.DispatchedProducts;
 import com.threepmanagerapi.threepmanagerapi.productdispatch.model.ProductDispatch;
 import com.threepmanagerapi.threepmanagerapi.productdispatch.repository.ProductDispatchRepository;
@@ -41,7 +44,7 @@ public class ProductDispatchService {
     @Autowired
     private JwtService jwtService;
     @Autowired
-    private UserRepository userRepository;
+    private MpesaIntegrationService mpesaIntegrationService;
     @Autowired
     private DispatchedProductsRepository dispatchedProductsRepository;
     @Autowired
@@ -52,6 +55,8 @@ public class ProductDispatchService {
     private MaterialStockingSpecification materialStockingSpecification;
     @Autowired
     private EmailService emailService;
+    @Autowired
+    private ClientRepository clientRepository;
 
     public ResponseEntity createProductDispatch(String token, ProductDispatch productDispatch){
         try{
@@ -125,6 +130,9 @@ public class ProductDispatchService {
             productDispatch.setReturned(false);
             productDispatch.setDispatchDate(LocalDateTime.now());
             productDispatchRepository.save(productDispatch);
+            Client client = productDispatch.getClient();
+            client.setCumulativeCratesOut(productDispatch.getCratesOut().add(client.getCumulativeCratesOut()));
+            clientRepository.save(client);
             emailService.sendProductDispatchCode(productDispatch.getClient().getEmail(),productDispatchCode,LocalDateTime.now().toString());
             emailService.sendProductDispatchCodeSms(productDispatch.getClient().getPhone(),productDispatchCode,LocalDateTime.now().toString());
             return responseService.formulateResponse(
@@ -178,6 +186,12 @@ public class ProductDispatchService {
             existingProductDispatch.setPaymentMode(productDispatch.getPaymentMode());
             existingProductDispatch.setReturned(true);
             productDispatchRepository.save(existingProductDispatch);
+            Client client = existingProductDispatch.getClient();
+            client.setCumulativeAmountToPay(client.getCumulativeAmountToPay().add(productDispatch.getTotalSalesPrice()));
+            client.setCumulativeAmountPaid(client.getCumulativeAmountPaid().add(productDispatch.getAmountPaid()));
+            client.setCumulativeAmountBalance(client.getCumulativeAmountBalance().add(productDispatch.getBalance()));
+            client.setCumulativeCratesIn(client.getCumulativeCratesIn().add(productDispatch.getCratesIn()));
+            clientRepository.save(client);
             emailService.sendProductDispatchReturn(existingProductDispatch.getClient().getEmail(),existingProductDispatch.getProductDispatchCode(),LocalDateTime.now().toString(),productDispatch.getAmountPaid().toString(),productDispatch.getBalance().toString() );
             emailService.sendProductDispatchReturnSms(existingProductDispatch.getClient().getPhone(), existingProductDispatch.getProductDispatchCode(), LocalDateTime.now().toString(),productDispatch.getAmountPaid().toString(),productDispatch.getBalance().toString());
             return responseService.formulateResponse(

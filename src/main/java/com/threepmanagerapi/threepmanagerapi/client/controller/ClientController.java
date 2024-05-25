@@ -1,6 +1,8 @@
 package com.threepmanagerapi.threepmanagerapi.client.controller;
 
+import com.threepmanagerapi.threepmanagerapi.client.dto.CratesDto;
 import com.threepmanagerapi.threepmanagerapi.client.dto.CreateClientDto;
+import com.threepmanagerapi.threepmanagerapi.client.dto.DebtDto;
 import com.threepmanagerapi.threepmanagerapi.client.model.Client;
 import com.threepmanagerapi.threepmanagerapi.client.service.ClientService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,5 +33,15 @@ public class ClientController {
     public ResponseEntity updateClients(@RequestHeader ("Authorization") String token,
                                         @RequestBody Client client) {
         return clientService.updateClient(client);
+    }
+    @PostMapping("/client/debtPayment")
+    public ResponseEntity payDebt(@RequestHeader ("Authorization") String token,
+                                        @RequestBody DebtDto debtDto) {
+        return clientService.payDebt(debtDto);
+    }
+    @PostMapping("/client/returnCrates")
+    public ResponseEntity returnCrates(@RequestHeader ("Authorization") String token,
+                                  @RequestBody CratesDto cratesDto) {
+        return clientService.returnCrates(cratesDto);
     }
 }
