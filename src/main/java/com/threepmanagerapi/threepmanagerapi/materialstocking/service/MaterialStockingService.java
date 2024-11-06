@@ -121,7 +121,7 @@ public class MaterialStockingService {
             material.setRemainingQuantity((material.getRemainingQuantity().subtract(materialStockUpdateDto.getInitialQuantity()).add(materialStockUpdateDto.getUpdatedQuantity())));
             existingMaterialStocking.setMaterial(materialStockUpdateDto.getMaterial());
             existingMaterialStocking.setQuantity(materialStockUpdateDto.getUpdatedQuantity());
-            existingMaterialStocking.setSupplier(materialStockUpdateDto.getSupplier());
+//            existingMaterialStocking.setSupplier(materialStockUpdateDto.getSupplier());
             existingMaterialStocking.setPurchaseDate(LocalDateTime.now());
             existingMaterialStocking.setUser(materialStockUpdateDto.getUser());
             existingMaterialStocking.setDescription(materialStockUpdateDto.getDescription());

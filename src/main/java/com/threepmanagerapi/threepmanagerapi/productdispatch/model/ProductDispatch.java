@@ -1,5 +1,6 @@
 package com.threepmanagerapi.threepmanagerapi.productdispatch.model;
 import com.threepmanagerapi.threepmanagerapi.client.model.Client;
+import com.threepmanagerapi.threepmanagerapi.supplier.model.Supplier;
 import com.threepmanagerapi.threepmanagerapi.user.model.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -29,8 +30,8 @@ public class ProductDispatch {
     private String vehicle;
     private String paymentMode;
     @OneToOne
-    @JoinColumn(name="client")
-    private Client client;
+    @JoinColumn(name="supplier")
+    private Supplier supplier;
     @OneToMany(mappedBy = "dispatchedProductID", cascade = CascadeType.ALL)
     private List<DispatchedProducts> dispatchedProducts;
     private boolean returned;

@@ -6,6 +6,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Entity
 @Data
 @AllArgsConstructor
@@ -17,7 +19,14 @@ public class Supplier {
     private String name;
     private String phone;
     private String alternativeContact;
+    private String physicalAddress;
     @OneToOne
     @JoinColumn(name = "userID")
     private User user;
+
+    private BigDecimal cumulativeAmountToPay;
+    private BigDecimal cumulativeAmountPaid;
+    private BigDecimal cumulativeAmountBalance;
+    private BigDecimal cumulativeCratesOut;
+    private BigDecimal cumulativeCratesIn;
 }

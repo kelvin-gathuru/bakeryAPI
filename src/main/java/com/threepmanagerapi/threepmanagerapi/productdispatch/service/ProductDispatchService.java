@@ -17,6 +17,8 @@ import com.threepmanagerapi.threepmanagerapi.settings.service.EmailService;
 import com.threepmanagerapi.threepmanagerapi.settings.service.JwtService;
 import com.threepmanagerapi.threepmanagerapi.settings.utility.RandomCodeGenerator;
 import com.threepmanagerapi.threepmanagerapi.settings.utility.ResponseService;
+import com.threepmanagerapi.threepmanagerapi.supplier.model.Supplier;
+import com.threepmanagerapi.threepmanagerapi.supplier.repository.SupplierRepository;
 import com.threepmanagerapi.threepmanagerapi.user.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,13 +59,15 @@ public class ProductDispatchService {
     private EmailService emailService;
     @Autowired
     private ClientRepository clientRepository;
+    @Autowired
+    private SupplierRepository supplierRepository;
 
     public ResponseEntity createProductDispatch(String token, ProductDispatch productDispatch){
         try{
             Long userID = jwtService.extractuserID(token);
             String productDispatchCode = RandomCodeGenerator.generateRandomCode();
             ProductDispatch existingProductDispatch = productDispatchRepository.findByProductDispatchCode(productDispatchCode);
-            List<ProductDispatch> productDispatchList = productDispatchRepository.findByClient(productDispatch.getClient());
+            List<ProductDispatch> productDispatchList = productDispatchRepository.findBySupplier(productDispatch.getSupplier());
             boolean clientHasUnreturned = false;
             for(ProductDispatch prod: productDispatchList){
                 if (!prod.isReturned()) {
@@ -74,7 +78,7 @@ public class ProductDispatchService {
             if(clientHasUnreturned){
                 return responseService.formulateResponse(
                         null,
-                        "The Agent has an Unreturned Dispatch...Select Another Client or wait for Dispatch Return..",
+                        "The Supplier has an Unreturned Dispatch...Select Another Supplier or wait for Dispatch Return..",
                         HttpStatus.INTERNAL_SERVER_ERROR,
                         null,
                         false
@@ -130,11 +134,11 @@ public class ProductDispatchService {
             productDispatch.setReturned(false);
             productDispatch.setDispatchDate(LocalDateTime.now());
             productDispatchRepository.save(productDispatch);
-            Client client = productDispatch.getClient();
-            client.setCumulativeCratesOut(productDispatch.getCratesOut().add(client.getCumulativeCratesOut()));
-            clientRepository.save(client);
-            emailService.sendProductDispatchCode(productDispatch.getClient().getEmail(),productDispatchCode,LocalDateTime.now().toString());
-            emailService.sendProductDispatchCodeSms(productDispatch.getClient().getPhone(),productDispatchCode,LocalDateTime.now().toString());
+            Supplier supplier = productDispatch.getSupplier();
+            supplier.setCumulativeCratesOut(productDispatch.getCratesOut().add(supplier.getCumulativeCratesOut()));
+            supplierRepository.save(supplier);
+            emailService.sendProductDispatchCode(productDispatch.getSupplier().getAlternativeContact(),productDispatchCode,LocalDateTime.now().toString());
+            emailService.sendProductDispatchCodeSms(productDispatch.getSupplier().getPhone(),productDispatchCode,LocalDateTime.now().toString());
             return responseService.formulateResponse(
                     productDispatchCode,
                     "Dispatch done successfully ",
@@ -186,14 +190,14 @@ public class ProductDispatchService {
             existingProductDispatch.setPaymentMode(productDispatch.getPaymentMode());
             existingProductDispatch.setReturned(true);
             productDispatchRepository.save(existingProductDispatch);
-            Client client = existingProductDispatch.getClient();
-            client.setCumulativeAmountToPay(client.getCumulativeAmountToPay().add(productDispatch.getTotalSalesPrice()));
-            client.setCumulativeAmountPaid(client.getCumulativeAmountPaid().add(productDispatch.getAmountPaid()));
-            client.setCumulativeAmountBalance(client.getCumulativeAmountBalance().add(productDispatch.getBalance()));
-            client.setCumulativeCratesIn(client.getCumulativeCratesIn().add(productDispatch.getCratesIn()));
-            clientRepository.save(client);
-            emailService.sendProductDispatchReturn(existingProductDispatch.getClient().getEmail(),existingProductDispatch.getProductDispatchCode(),LocalDateTime.now().toString(),productDispatch.getAmountPaid().toString(),productDispatch.getBalance().toString() );
-            emailService.sendProductDispatchReturnSms(existingProductDispatch.getClient().getPhone(), existingProductDispatch.getProductDispatchCode(), LocalDateTime.now().toString(),productDispatch.getAmountPaid().toString(),productDispatch.getBalance().toString());
+            Supplier supplier = existingProductDispatch.getSupplier();
+            supplier.setCumulativeAmountToPay(supplier.getCumulativeAmountToPay().add(productDispatch.getTotalSalesPrice()));
+            supplier.setCumulativeAmountPaid(supplier.getCumulativeAmountPaid().add(productDispatch.getAmountPaid()));
+            supplier.setCumulativeAmountBalance(supplier.getCumulativeAmountBalance().add(productDispatch.getBalance()));
+            supplier.setCumulativeCratesIn(supplier.getCumulativeCratesIn().add(productDispatch.getCratesIn()));
+            supplierRepository.save(supplier);
+            emailService.sendProductDispatchReturn(existingProductDispatch.getSupplier().getAlternativeContact(),existingProductDispatch.getProductDispatchCode(),LocalDateTime.now().toString(),productDispatch.getAmountPaid().toString(),productDispatch.getBalance().toString() );
+            emailService.sendProductDispatchReturnSms(existingProductDispatch.getSupplier().getPhone(), existingProductDispatch.getProductDispatchCode(), LocalDateTime.now().toString(),productDispatch.getAmountPaid().toString(),productDispatch.getBalance().toString());
             return responseService.formulateResponse(
                     null,
                     "Dispatch Return done successfully ",

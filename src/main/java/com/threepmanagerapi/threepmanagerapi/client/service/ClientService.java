@@ -41,6 +41,7 @@ public class ClientService {
     private ArchivedClientRepository archivedClientRepository;
     public ResponseEntity createClient(String token, CreateClientDto createClientDto){
         try{
+            System.out.println(createClientDto);
             Optional<Client> existingClient = clientRepository.findByPhone(createClientDto.getPhone());
             Optional<Client> existingClient1 = clientRepository.findByEmail(createClientDto.getEmail());
             Long userID = jwtService.extractuserID(token);
@@ -81,7 +82,7 @@ public class ClientService {
             client.setUser(userRepository.findByUserID(userID));
             client.setRegion(region);
             client.setEmail(createClientDto.getEmail());
-            client.setRegistrationType(RegistrationType.valueOf(createClientDto.getRegistrationType()));
+//            client.setRegistrationType(RegistrationType.valueOf(createClientDto.getRegistrationType()));
             client.setSalesType(SalesType.valueOf(createClientDto.getSalesType()));
             client.setStatus(Status.valueOf(createClientDto.getStatus()));
             client.setCumulativeAmountToPay(BigDecimal.valueOf(0));

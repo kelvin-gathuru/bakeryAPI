@@ -3,6 +3,7 @@ package com.threepmanagerapi.threepmanagerapi.productdispatch.repository;
 import com.threepmanagerapi.threepmanagerapi.client.model.Client;
 import com.threepmanagerapi.threepmanagerapi.productdispatch.model.ProductDispatch;
 import com.threepmanagerapi.threepmanagerapi.productdispatch.specification.ProductDispatchSpecification;
+import com.threepmanagerapi.threepmanagerapi.supplier.model.Supplier;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -15,6 +16,6 @@ public interface ProductDispatchRepository extends JpaRepository<ProductDispatch
     ProductDispatch findByProductDispatchID(Long id);
     List<ProductDispatch> findByReturned(boolean returned);
     List<ProductDispatch> findByReturnedDateBetween(LocalDateTime startDate, LocalDateTime endDate);
-    List<ProductDispatch> findByClient(Client client);
+    List<ProductDispatch> findBySupplier(Supplier supplier);
     public List<ProductDispatch> findAll (Specification<ProductDispatch> specification);
 }

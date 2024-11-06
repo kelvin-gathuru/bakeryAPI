@@ -11,7 +11,7 @@ public class CreateClientDto {
     private String phone;
     private String email;
     private String salesType;
-    private String registrationType;
+//    private String registrationType;
     private String status;
     private Long regionID;
 }

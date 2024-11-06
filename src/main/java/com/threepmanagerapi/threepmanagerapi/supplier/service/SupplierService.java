@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -39,6 +40,11 @@ public class SupplierService {
             }
 
             supplier.setUser(userRepository.findByUserID(userID));
+            supplier.setCumulativeAmountToPay(BigDecimal.valueOf(0));
+            supplier.setCumulativeAmountPaid(BigDecimal.valueOf(0));
+            supplier.setCumulativeAmountBalance(BigDecimal.valueOf(0));
+            supplier.setCumulativeCratesIn(BigDecimal.valueOf(0));
+            supplier.setCumulativeCratesOut(BigDecimal.valueOf(0));
 
             supplierRepository.save(supplier);
             return responseService.formulateResponse(

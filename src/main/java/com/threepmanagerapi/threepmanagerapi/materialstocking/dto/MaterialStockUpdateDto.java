@@ -23,9 +23,9 @@ public class MaterialStockUpdateDto {
     @OneToOne
     @JoinColumn(name="materialID")
     private Material material;
-    @OneToOne
-    @JoinColumn(name="supplierID")
-    private Supplier supplier;
+//    @OneToOne
+//    @JoinColumn(name="supplierID")
+//    private Supplier supplier;
     @OneToOne
     @JoinColumn(name="createdBy")
     private User user;
