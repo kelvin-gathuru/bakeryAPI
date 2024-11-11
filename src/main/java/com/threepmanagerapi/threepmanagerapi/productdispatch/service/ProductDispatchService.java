@@ -6,8 +6,13 @@ import com.threepmanagerapi.threepmanagerapi.materialstocking.model.MaterialStoc
 import com.threepmanagerapi.threepmanagerapi.materialstocking.repository.MaterialStockingRepository;
 import com.threepmanagerapi.threepmanagerapi.materialstocking.specification.MaterialStockingSpecification;
 import com.threepmanagerapi.threepmanagerapi.mpesaintegration.service.MpesaIntegrationService;
+import com.threepmanagerapi.threepmanagerapi.productdispatch.dto.ClientDispatchDto;
+import com.threepmanagerapi.threepmanagerapi.productdispatch.model.ClientsDispatchedProducts;
+import com.threepmanagerapi.threepmanagerapi.productdispatch.model.ClientsProductDispatch;
 import com.threepmanagerapi.threepmanagerapi.productdispatch.model.DispatchedProducts;
 import com.threepmanagerapi.threepmanagerapi.productdispatch.model.ProductDispatch;
+import com.threepmanagerapi.threepmanagerapi.productdispatch.repository.ClientDispatchedProductsRepository;
+import com.threepmanagerapi.threepmanagerapi.productdispatch.repository.ClientsProductDispatchRepository;
 import com.threepmanagerapi.threepmanagerapi.productdispatch.repository.ProductDispatchRepository;
 import com.threepmanagerapi.threepmanagerapi.productdispatch.specification.ProductDispatchSpecification;
 import com.threepmanagerapi.threepmanagerapi.products.model.Product;
@@ -19,6 +24,7 @@ import com.threepmanagerapi.threepmanagerapi.settings.utility.RandomCodeGenerato
 import com.threepmanagerapi.threepmanagerapi.settings.utility.ResponseService;
 import com.threepmanagerapi.threepmanagerapi.supplier.model.Supplier;
 import com.threepmanagerapi.threepmanagerapi.supplier.repository.SupplierRepository;
+import com.threepmanagerapi.threepmanagerapi.user.model.User;
 import com.threepmanagerapi.threepmanagerapi.user.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,6 +67,12 @@ public class ProductDispatchService {
     private ClientRepository clientRepository;
     @Autowired
     private SupplierRepository supplierRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private ClientDispatchedProductsRepository clientDispatchedProductsRepository;
+    @Autowired
+    private ClientsProductDispatchRepository clientsProductDispatchRepository;
 
     public ResponseEntity createProductDispatch(String token, ProductDispatch productDispatch){
         try{
@@ -305,6 +317,82 @@ public class ProductDispatchService {
             return responseService.formulateResponse(
                     null,
                     "Exception fetching dispatch returns ",
+                    HttpStatus.BAD_REQUEST,
+                    null,
+                    false
+            );
+        }
+    }
+
+    public ResponseEntity createProductDispatchForClient(String token, List<ClientDispatchDto> clientDispatchDtos){
+        try{
+            Long userID = jwtService.extractuserID(token);
+            ProductDispatch existingProductDispatch = productDispatchRepository.findByProductDispatchCode(clientDispatchDtos.get(0).getDispatchedProducts().get(0).getProductDispatchCode());
+            User user = userRepository.findByUserID(userID);
+
+            if(existingProductDispatch==null){
+                return responseService.formulateResponse(
+                        null,
+                        "A problem occurred in finding the dispatch. Try Again...",
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        null,
+                        false
+                );
+            }
+            BigDecimal amount = BigDecimal.valueOf(0);
+            for (ClientDispatchDto clientDispatchDto : clientDispatchDtos) {
+                BigDecimal total = BigDecimal.valueOf(0);
+                BigDecimal clientsTotals = BigDecimal.valueOf(0);
+                for(DispatchedProducts clientsDispatchedProducts: clientDispatchDto.getDispatchedProducts()){
+                    ClientsDispatchedProducts clientsDispatchedProducts1 = new ClientsDispatchedProducts();
+                    clientsDispatchedProducts1.setProductDispatchCode(existingProductDispatch.getProductDispatchCode());
+                    clientsDispatchedProducts1.setProductID(clientsDispatchedProducts.getProductID());
+                    clientsDispatchedProducts1.setClientID(clientDispatchDto.getClientID());
+                    clientsDispatchedProducts1.setName(clientsDispatchedProducts.getName());
+                    clientsDispatchedProducts1.setMetric(clientsDispatchedProducts.getMetric());
+                    clientsDispatchedProducts1.setDeliveredQuantity(clientsDispatchedProducts.getDeliveredQuantity());
+                    clientsDispatchedProducts1.setUser(user);
+                    clientsDispatchedProducts1.setSaleDate(LocalDateTime.now());
+                    clientsDispatchedProducts1.setUnitPrice(clientsDispatchedProducts.getUnitPrice());
+                    clientsDispatchedProducts1.setDeliveredProductPrice(clientsDispatchedProducts.getUnitPrice().multiply(clientsDispatchedProducts.getDeliveredQuantity()));
+                    clientDispatchedProductsRepository.save(clientsDispatchedProducts1);
+                    total = total.add(clientsDispatchedProducts1.getDeliveredProductPrice());
+
+                    DispatchedProducts dispatchedProducts = dispatchedProductsRepository.findByProductDispatchCodeAndDispatchedProductID(existingProductDispatch.getProductDispatchCode(), clientsDispatchedProducts.getDispatchedProductID());
+                    dispatchedProducts.setSalesPrice(dispatchedProducts.getSalesPrice().subtract(clientsDispatchedProducts.getTotalPrice()));
+                    dispatchedProducts.setQuantity(dispatchedProducts.getQuantity().subtract(clientsDispatchedProducts.getDeliveredQuantity()));
+                    dispatchedProducts.setTotalPrice(dispatchedProducts.getTotalPrice().subtract(clientsDispatchedProducts.getDeliveredProductPrice()));
+                    dispatchedProductsRepository.save(dispatchedProducts);
+
+                    Client client = clientRepository.findByClientID(clientsDispatchedProducts1.getClientID());
+                    clientsTotals = clientsTotals.add(clientsDispatchedProducts.getDeliveredProductPrice());
+                    client.setCumulativeAmountToPay(clientsTotals);
+                    clientRepository.save(client);
+                }
+
+                ClientsProductDispatch clientsProductDispatch = new ClientsProductDispatch();
+                clientsProductDispatch.setProductDispatchCode(existingProductDispatch.getProductDispatchCode());
+                clientsProductDispatch.setDispatchDate(LocalDateTime.now());
+                clientsProductDispatch.setTotalDispatchPrice(total);
+                clientsProductDispatchRepository.save(clientsProductDispatch);
+                amount = amount.add(clientsProductDispatch.getTotalDispatchPrice());
+            }
+
+            existingProductDispatch.setTotalDispatchPrice(existingProductDispatch.getTotalDispatchPrice().subtract(amount));
+            productDispatchRepository.save(existingProductDispatch);
+            return responseService.formulateResponse(
+                    existingProductDispatch.getProductDispatchCode(),
+                    "Clients Dispatch done successfully ",
+                    HttpStatus.OK,
+                    null,
+                    true
+            );
+
+        } catch (Exception exception) {
+            log.error("Encountered Exception {}", exception.getMessage());
+            return responseService.formulateResponse(
+                    null,
+                    "Exception dispatching clients products ",
                     HttpStatus.BAD_REQUEST,
                     null,
                     false

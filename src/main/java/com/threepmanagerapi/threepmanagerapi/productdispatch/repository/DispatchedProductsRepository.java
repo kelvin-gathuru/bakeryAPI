@@ -10,4 +10,6 @@ public interface DispatchedProductsRepository extends JpaRepository<DispatchedPr
     List<DispatchedProducts> findByProductDispatchCode(String code);
 
     DispatchedProducts findByDispatchedProductID(Long Id);
+
+    DispatchedProducts findByProductDispatchCodeAndDispatchedProductID(String code, Long dispatchedProductID);
 }

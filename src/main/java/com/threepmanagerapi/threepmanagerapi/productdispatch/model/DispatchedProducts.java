@@ -44,4 +44,6 @@ public class DispatchedProducts {
     private LocalDateTime dateCreated;
     private LocalDateTime saleDate;
     private  BigDecimal totalSalesForRetrieval;
+    private BigDecimal deliveredQuantity;
+    private BigDecimal deliveredProductPrice;
 }

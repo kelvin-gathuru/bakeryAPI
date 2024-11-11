@@ -134,6 +134,7 @@ public class UserService {
 
     public ResponseEntity forgotPassword(EmailDto emailDto) {
         try {
+            System.out.println(emailDto);
             Optional<User> user = userRepository.findByEmail(emailDto.getEmail());
             if (user.isEmpty()) {
                 return responseService.formulateResponse(
