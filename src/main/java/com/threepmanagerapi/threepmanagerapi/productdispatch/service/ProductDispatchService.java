@@ -344,30 +344,33 @@ public class ProductDispatchService {
                 BigDecimal total = BigDecimal.valueOf(0);
                 BigDecimal clientsTotals = BigDecimal.valueOf(0);
                 for(DispatchedProducts clientsDispatchedProducts: clientDispatchDto.getDispatchedProducts()){
-                    ClientsDispatchedProducts clientsDispatchedProducts1 = new ClientsDispatchedProducts();
-                    clientsDispatchedProducts1.setProductDispatchCode(existingProductDispatch.getProductDispatchCode());
-                    clientsDispatchedProducts1.setProductID(clientsDispatchedProducts.getProductID());
-                    clientsDispatchedProducts1.setClientID(clientDispatchDto.getClientID());
-                    clientsDispatchedProducts1.setName(clientsDispatchedProducts.getName());
-                    clientsDispatchedProducts1.setMetric(clientsDispatchedProducts.getMetric());
-                    clientsDispatchedProducts1.setDeliveredQuantity(clientsDispatchedProducts.getDeliveredQuantity());
-                    clientsDispatchedProducts1.setUser(user);
-                    clientsDispatchedProducts1.setSaleDate(LocalDateTime.now());
-                    clientsDispatchedProducts1.setUnitPrice(clientsDispatchedProducts.getUnitPrice());
-                    clientsDispatchedProducts1.setDeliveredProductPrice(clientsDispatchedProducts.getUnitPrice().multiply(clientsDispatchedProducts.getDeliveredQuantity()));
-                    clientDispatchedProductsRepository.save(clientsDispatchedProducts1);
-                    total = total.add(clientsDispatchedProducts1.getDeliveredProductPrice());
+                    if(clientsDispatchedProducts.getDeliveredQuantity().compareTo(BigDecimal.ZERO) > 0){
+                        ClientsDispatchedProducts clientsDispatchedProducts1 = new ClientsDispatchedProducts();
+                        clientsDispatchedProducts1.setProductDispatchCode(existingProductDispatch.getProductDispatchCode());
+                        clientsDispatchedProducts1.setProductID(clientsDispatchedProducts.getProductID());
+                        clientsDispatchedProducts1.setClientID(clientDispatchDto.getClientID());
+                        clientsDispatchedProducts1.setName(clientsDispatchedProducts.getName());
+                        clientsDispatchedProducts1.setMetric(clientsDispatchedProducts.getMetric());
+                        clientsDispatchedProducts1.setDeliveredQuantity(clientsDispatchedProducts.getDeliveredQuantity());
+                        clientsDispatchedProducts1.setUser(user);
+                        clientsDispatchedProducts1.setSaleDate(LocalDateTime.now());
+                        clientsDispatchedProducts1.setUnitPrice(clientsDispatchedProducts.getUnitPrice());
+                        clientsDispatchedProducts1.setDeliveredProductPrice(clientsDispatchedProducts.getUnitPrice().multiply(clientsDispatchedProducts.getDeliveredQuantity()));
+                        clientDispatchedProductsRepository.save(clientsDispatchedProducts1);
+                        total = total.add(clientsDispatchedProducts1.getDeliveredProductPrice());
 
-                    DispatchedProducts dispatchedProducts = dispatchedProductsRepository.findByProductDispatchCodeAndDispatchedProductID(existingProductDispatch.getProductDispatchCode(), clientsDispatchedProducts.getDispatchedProductID());
-                    dispatchedProducts.setSalesPrice(dispatchedProducts.getSalesPrice().subtract(clientsDispatchedProducts.getTotalPrice()));
-                    dispatchedProducts.setQuantity(dispatchedProducts.getQuantity().subtract(clientsDispatchedProducts.getDeliveredQuantity()));
-                    dispatchedProducts.setTotalPrice(dispatchedProducts.getTotalPrice().subtract(clientsDispatchedProducts.getDeliveredProductPrice()));
-                    dispatchedProductsRepository.save(dispatchedProducts);
+                        DispatchedProducts dispatchedProducts = dispatchedProductsRepository.findByProductDispatchCodeAndDispatchedProductID(existingProductDispatch.getProductDispatchCode(), clientsDispatchedProducts.getDispatchedProductID());
+                        dispatchedProducts.setSalesPrice(dispatchedProducts.getSalesPrice().subtract(clientsDispatchedProducts.getTotalPrice()));
+                        dispatchedProducts.setQuantity(dispatchedProducts.getQuantity().subtract(clientsDispatchedProducts.getDeliveredQuantity()));
+                        dispatchedProducts.setTotalPrice(dispatchedProducts.getTotalPrice().subtract(clientsDispatchedProducts.getDeliveredProductPrice()));
+                        dispatchedProductsRepository.save(dispatchedProducts);
 
-                    Client client = clientRepository.findByClientID(clientsDispatchedProducts1.getClientID());
-                    clientsTotals = clientsTotals.add(clientsDispatchedProducts.getDeliveredProductPrice());
-                    client.setCumulativeAmountToPay(clientsTotals);
-                    clientRepository.save(client);
+                        Client client = clientRepository.findByClientID(clientsDispatchedProducts1.getClientID());
+                        clientsTotals = clientsTotals.add(clientsDispatchedProducts.getDeliveredProductPrice());
+                        client.setCumulativeAmountToPay(clientsTotals);
+                        clientRepository.save(client);
+                    }
+
                 }
 
                 ClientsProductDispatch clientsProductDispatch = new ClientsProductDispatch();
