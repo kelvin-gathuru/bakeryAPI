@@ -2,6 +2,8 @@ package com.threepmanagerapi.threepmanagerapi.productdispatch.controller;
 
 import com.threepmanagerapi.threepmanagerapi.materialdispatch.dto.MaterialDispatchCreateDto;
 import com.threepmanagerapi.threepmanagerapi.productdispatch.dto.ClientDispatchDto;
+import com.threepmanagerapi.threepmanagerapi.productdispatch.dto.CratesDto;
+import com.threepmanagerapi.threepmanagerapi.productdispatch.dto.PaymentDto;
 import com.threepmanagerapi.threepmanagerapi.productdispatch.model.ProductDispatch;
 import com.threepmanagerapi.threepmanagerapi.productdispatch.service.ProductDispatchService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,5 +48,24 @@ public class ProductDispatchController {
                                                 @RequestBody List<ClientDispatchDto> clientDispatchDtos) {
         System.out.println(clientDispatchDtos);
         return productDispatchService.createProductDispatchForClient(token, clientDispatchDtos);
+    }
+    @GetMapping("/productDispatchForClient/get")
+    public ResponseEntity getProductDispatchForClient(@RequestHeader ("Authorization") String token) {
+        return productDispatchService.getProductDispatchForClient();
+    }
+    @PostMapping("/clientPayment/create")
+    public ResponseEntity createClientPayment(@RequestHeader("Authorization") String token,
+                                                         @RequestBody PaymentDto paymentDto) {
+        return productDispatchService.createClientPayment(token, paymentDto);
+    }
+    @PostMapping("/supplierPayment/create")
+    public ResponseEntity createSupplierPayment(@RequestHeader("Authorization") String token,
+                                              @RequestBody PaymentDto paymentDto) {
+        return productDispatchService.createSupplierPayment(token, paymentDto);
+    }
+    @PostMapping("/supplierCrates/return")
+    public ResponseEntity returnSupplierCrates(@RequestHeader("Authorization") String token,
+                                                @RequestBody CratesDto cratesDto) {
+        return productDispatchService.returnSupplierCrates(token, cratesDto);
     }
 }

@@ -1,5 +1,6 @@
 package com.threepmanagerapi.threepmanagerapi.productdispatch.model;
 
+import com.threepmanagerapi.threepmanagerapi.client.model.Client;
 import com.threepmanagerapi.threepmanagerapi.user.model.User;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -29,4 +30,6 @@ public class ClientsDispatchedProducts {
     private BigDecimal unitPrice;
     private LocalDateTime saleDate;
     private Long clientID;
+    @OneToOne
+    private Client client;
 }

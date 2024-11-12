@@ -7,6 +7,8 @@ import com.threepmanagerapi.threepmanagerapi.materialstocking.repository.Materia
 import com.threepmanagerapi.threepmanagerapi.materialstocking.specification.MaterialStockingSpecification;
 import com.threepmanagerapi.threepmanagerapi.mpesaintegration.service.MpesaIntegrationService;
 import com.threepmanagerapi.threepmanagerapi.productdispatch.dto.ClientDispatchDto;
+import com.threepmanagerapi.threepmanagerapi.productdispatch.dto.CratesDto;
+import com.threepmanagerapi.threepmanagerapi.productdispatch.dto.PaymentDto;
 import com.threepmanagerapi.threepmanagerapi.productdispatch.model.ClientsDispatchedProducts;
 import com.threepmanagerapi.threepmanagerapi.productdispatch.model.ClientsProductDispatch;
 import com.threepmanagerapi.threepmanagerapi.productdispatch.model.DispatchedProducts;
@@ -327,6 +329,15 @@ public class ProductDispatchService {
     public ResponseEntity createProductDispatchForClient(String token, List<ClientDispatchDto> clientDispatchDtos){
         try{
             Long userID = jwtService.extractuserID(token);
+            if(clientDispatchDtos.isEmpty()){
+                return responseService.formulateResponse(
+                        null,
+                        "No Clients dispatch. Proceed...",
+                        HttpStatus.OK,
+                        null,
+                        true
+                );
+            }
             ProductDispatch existingProductDispatch = productDispatchRepository.findByProductDispatchCode(clientDispatchDtos.get(0).getDispatchedProducts().get(0).getProductDispatchCode());
             User user = userRepository.findByUserID(userID);
 
@@ -367,7 +378,7 @@ public class ProductDispatchService {
 
                         Client client = clientRepository.findByClientID(clientsDispatchedProducts1.getClientID());
                         clientsTotals = clientsTotals.add(clientsDispatchedProducts.getDeliveredProductPrice());
-                        client.setCumulativeAmountToPay(clientsTotals);
+                        client.setCumulativeAmountToPay(client.getCumulativeAmountToPay().add(clientsTotals));
                         clientRepository.save(client);
                     }
 
@@ -402,4 +413,157 @@ public class ProductDispatchService {
             );
         }
     }
+
+    public ResponseEntity getProductDispatchForClient() {
+        try {
+            // Fetch all dispatched products
+            List<ClientsDispatchedProducts> clientsDispatchedProducts = clientDispatchedProductsRepository.findAll();
+
+            // Initialize a map to hold the data grouped by productDispatchCode
+            Map<String, Map<Integer, List<ClientsDispatchedProducts>>> groupedData = new HashMap<>();
+
+            // Populate the map
+            for (ClientsDispatchedProducts product : clientsDispatchedProducts) {
+                // Fetch client details and set it in the product object
+                Client client = clientRepository.findByClientID(product.getClientID());
+                product.setClient(client); // Set client object in the product
+
+                // Group by productDispatchCode
+                groupedData
+                        .computeIfAbsent(product.getProductDispatchCode(), k -> new HashMap<>()) // Create productDispatchCode entry if it doesn't exist
+                        .computeIfAbsent(product.getClientID().intValue(), k -> new ArrayList<>())           // Create clientID entry if it doesn't exist
+                        .add(product);                                                           // Add product to the client array
+            }
+
+            // Convert the map to the structure expected by the frontend
+            List<Map<String, Object>> responseData = new ArrayList<>();
+            for (String dispatchCode : groupedData.keySet()) {
+                Map<String, Object> dispatchGroup = new HashMap<>();
+                dispatchGroup.put("productDispatchCode", dispatchCode);
+
+                List<Map<String, Object>> clientsList = new ArrayList<>();
+                for (Integer clientId : groupedData.get(dispatchCode).keySet()) {
+                    Map<String, Object> clientData = new HashMap<>();
+                    Client client = groupedData.get(dispatchCode).get(clientId).get(0).getClient();  // Get client object from the first product
+
+                    // Add entire client object to the response
+                    clientData.put("client", client);
+
+                    // Collect products for this client
+                    List<Map<String, Object>> productsList = new ArrayList<>();
+                    for (ClientsDispatchedProducts product : groupedData.get(dispatchCode).get(clientId)) {
+                        Map<String, Object> productData = new HashMap<>();
+                        productData.put("productID", product.getProductID());
+                        productData.put("name", product.getName());
+                        productData.put("unitPrice", product.getUnitPrice());
+                        productData.put("deliveredQuantity", product.getDeliveredQuantity());
+                        productData.put("deliveredProductPrice", product.getDeliveredProductPrice());
+                        productData.put("saleDate", product.getSaleDate());
+                        productsList.add(productData);
+                    }
+                    clientData.put("products", productsList);
+                    clientsList.add(clientData);
+                }
+                dispatchGroup.put("clients", clientsList);
+                responseData.add(dispatchGroup);
+            }
+
+            // Return the formatted response
+            return responseService.formulateResponse(
+                    responseData,
+                    "Clients Dispatch fetched successfully",
+                    HttpStatus.OK,
+                    null,
+                    true
+            );
+
+        } catch (Exception exception) {
+            log.error("Encountered Exception {}", exception.getMessage());
+            return responseService.formulateResponse(
+                    null,
+                    "Exception fetching dispatch",
+                    HttpStatus.BAD_REQUEST,
+                    null,
+                    false
+            );
+        }
+    }
+
+    public ResponseEntity createClientPayment(String token, PaymentDto paymentDto){
+        try{
+            System.out.println(paymentDto);
+            Long userID = jwtService.extractuserID(token);
+            Client client = clientRepository.findByClientID(paymentDto.getPayerID());
+            client.setCumulativeAmountPaid(client.getCumulativeAmountPaid().add(paymentDto.getAmount()));
+            clientRepository.save(client);
+            return responseService.formulateResponse(
+                    null,
+                    "Payment Successful",
+                    HttpStatus.OK,
+                    null,
+                    true
+            );
+        } catch (Exception exception) {
+            log.error("Encountered Exception {}", exception.getMessage());
+            return responseService.formulateResponse(
+                    null,
+                    "Exception making payment ",
+                    HttpStatus.BAD_REQUEST,
+                    null,
+                    false
+            );
+        }
+    }
+
+    public ResponseEntity createSupplierPayment(String token, PaymentDto paymentDto){
+        try{
+            Long userID = jwtService.extractuserID(token);
+            Supplier supplier = supplierRepository.findBySupplierID(paymentDto.getPayerID());
+            supplier.setCumulativeAmountPaid(supplier.getCumulativeAmountPaid().add(paymentDto.getAmount()));
+            supplierRepository.save(supplier);
+            return responseService.formulateResponse(
+                    null,
+                    "Payment Successful",
+                    HttpStatus.OK,
+                    null,
+                    true
+            );
+        } catch (Exception exception) {
+            log.error("Encountered Exception {}", exception.getMessage());
+            return responseService.formulateResponse(
+                    null,
+                    "Exception making payment ",
+                    HttpStatus.BAD_REQUEST,
+                    null,
+                    false
+            );
+        }
+    }
+
+    public ResponseEntity returnSupplierCrates(String token, CratesDto cratesDto){
+        try{
+            Long userID = jwtService.extractuserID(token);
+            Supplier supplier = supplierRepository.findBySupplierID(cratesDto.getSupplierID());
+            supplier.setCumulativeCratesIn(supplier.getCumulativeCratesIn().add(cratesDto.getCrates()));
+            supplierRepository.save(supplier);
+            return responseService.formulateResponse(
+                    null,
+                    "Crates return Successful",
+                    HttpStatus.OK,
+                    null,
+                    true
+            );
+        } catch (Exception exception) {
+            log.error("Encountered Exception {}", exception.getMessage());
+            return responseService.formulateResponse(
+                    null,
+                    "Exception returning crates ",
+                    HttpStatus.BAD_REQUEST,
+                    null,
+                    false
+            );
+        }
+    }
+
+
 }
