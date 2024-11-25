@@ -64,8 +64,8 @@ public class AnalyticsService {
             List<Product> latestProducts = products.stream().filter(
                     product -> product.getDateCreated().isAfter(LocalDateTime.now().minusDays(1))).toList();
 
-            List<Product> bestPricedProducts = productRepository.findAll().stream()
-                    .sorted(Comparator.comparing(Product::getUnitPrice).reversed())
+            List<Material> bestPricedProducts = materialRepository.findAll().stream()
+                    .sorted(Comparator.comparing(Material::getUnitPrice).reversed())
                     .limit(3)
                     .toList();
 
