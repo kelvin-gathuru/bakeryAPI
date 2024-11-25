@@ -28,6 +28,7 @@ public class ClientsDispatchedProducts {
     private String name;
     private String metric;
     private BigDecimal unitPrice;
+    private BigDecimal price;
     private LocalDateTime saleDate;
     private Long clientID;
     @OneToOne

@@ -137,6 +137,7 @@ public class ProductDispatchService {
                 dispatchedProducts.setReturnedSpoiled(BigDecimal.valueOf(0));
                 dispatchedProducts.setSoldQuantity(dispatchedProducts.getQuantity());
                 dispatchedProducts.setSalesPrice(BigDecimal.valueOf(0));
+                dispatchedProducts.setPrice(dispatchedProducts.getPrice());
                 dispatchedProductsRepository.save(dispatchedProducts);
                 price = price.add(dispatchedProducts.getTotalPrice());
             }
@@ -236,7 +237,7 @@ public class ProductDispatchService {
             for (ProductDispatch productDispatch : productDispatches) {
                 List<DispatchedProducts> dispatchedProducts = dispatchedProductsRepository.findByProductDispatchCode(productDispatch.getProductDispatchCode());
                 for(DispatchedProducts dispatchedProducts1: dispatchedProducts){
-                    dispatchedProducts1.setSalesPrice(dispatchedProducts1.getUnitPrice().multiply(dispatchedProducts1.getQuantity()));
+                    dispatchedProducts1.setSalesPrice(dispatchedProducts1.getPrice().multiply(dispatchedProducts1.getQuantity()));
                 }
                 productDispatch.setDispatchedProducts(dispatchedProducts);
                 Duration duration = Duration.between(LocalDateTime.now(),productDispatch.getDispatchDate());
@@ -365,8 +366,8 @@ public class ProductDispatchService {
                         clientsDispatchedProducts1.setDeliveredQuantity(clientsDispatchedProducts.getDeliveredQuantity());
                         clientsDispatchedProducts1.setUser(user);
                         clientsDispatchedProducts1.setSaleDate(LocalDateTime.now());
-                        clientsDispatchedProducts1.setUnitPrice(clientsDispatchedProducts.getUnitPrice());
-                        clientsDispatchedProducts1.setDeliveredProductPrice(clientsDispatchedProducts.getUnitPrice().multiply(clientsDispatchedProducts.getDeliveredQuantity()));
+                        clientsDispatchedProducts1.setPrice(clientsDispatchedProducts.getPrice());
+                        clientsDispatchedProducts1.setDeliveredProductPrice(clientsDispatchedProducts.getPrice().multiply(clientsDispatchedProducts.getDeliveredQuantity()));
                         clientDispatchedProductsRepository.save(clientsDispatchedProducts1);
                         total = total.add(clientsDispatchedProducts1.getDeliveredProductPrice());
 
