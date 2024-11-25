@@ -54,7 +54,7 @@ public class EmailService {
 //        Settings settings1 = settings.get(0);
 //        String url = settings1.getUrl();
 //        String resetLink = url+"reset-your-password?email=" + email;
-        String resetLink = "http://localhost:4200/reset-your-password?email=" + email;
+        String resetLink = "http://www.3modernsystems.co.ke/bakery-ui/reset-your-password?email=" + email;
         String payload = "{\"notificationCode\":\"PMANAGER-EMAIL\"," +
                 "\"clientID\":1," +
                 "\"message\":\"Click this link to reset your Bakery Manager password: " + resetLink + "\"," +
