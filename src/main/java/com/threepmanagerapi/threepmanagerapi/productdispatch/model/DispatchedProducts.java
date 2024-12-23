@@ -46,5 +46,7 @@ public class DispatchedProducts {
     private  BigDecimal totalSalesForRetrieval;
     private BigDecimal deliveredQuantity;
     private BigDecimal deliveredProductPrice;
+    private BigDecimal clientDeliveredProductPrice;
     private BigDecimal price;
+    private BigDecimal clientAmount;
 }

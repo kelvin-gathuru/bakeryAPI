@@ -354,6 +354,7 @@ public class ProductDispatchService {
             BigDecimal amount = BigDecimal.valueOf(0);
             for (ClientDispatchDto clientDispatchDto : clientDispatchDtos) {
                 BigDecimal total = BigDecimal.valueOf(0);
+                BigDecimal total1 = BigDecimal.valueOf(0);
                 BigDecimal clientsTotals = BigDecimal.valueOf(0);
                 for(DispatchedProducts clientsDispatchedProducts: clientDispatchDto.getDispatchedProducts()){
                     if(clientsDispatchedProducts.getDeliveredQuantity().compareTo(BigDecimal.ZERO) > 0){
@@ -367,9 +368,12 @@ public class ProductDispatchService {
                         clientsDispatchedProducts1.setUser(user);
                         clientsDispatchedProducts1.setSaleDate(LocalDateTime.now());
                         clientsDispatchedProducts1.setPrice(clientsDispatchedProducts.getPrice());
+                        clientsDispatchedProducts1.setClientAmount(clientsDispatchedProducts.getClientAmount());
                         clientsDispatchedProducts1.setDeliveredProductPrice(clientsDispatchedProducts.getPrice().multiply(clientsDispatchedProducts.getDeliveredQuantity()));
+                        clientsDispatchedProducts1.setClientDeliveredProductPrice(clientsDispatchedProducts.getClientAmount().multiply(clientsDispatchedProducts.getDeliveredQuantity()));
                         clientDispatchedProductsRepository.save(clientsDispatchedProducts1);
                         total = total.add(clientsDispatchedProducts1.getDeliveredProductPrice());
+                        total1  = total1.add(clientsDispatchedProducts1.getClientDeliveredProductPrice());
 
                         DispatchedProducts dispatchedProducts = dispatchedProductsRepository.findByProductDispatchCodeAndDispatchedProductID(existingProductDispatch.getProductDispatchCode(), clientsDispatchedProducts.getDispatchedProductID());
                         dispatchedProducts.setSalesPrice(dispatchedProducts.getSalesPrice().subtract(clientsDispatchedProducts.getTotalPrice()));
@@ -378,7 +382,7 @@ public class ProductDispatchService {
                         dispatchedProductsRepository.save(dispatchedProducts);
 
                         Client client = clientRepository.findByClientID(clientsDispatchedProducts1.getClientID());
-                        clientsTotals = clientsTotals.add(clientsDispatchedProducts.getDeliveredProductPrice());
+                        clientsTotals = clientsTotals.add(clientsDispatchedProducts.getClientDeliveredProductPrice());
                         client.setCumulativeAmountToPay(client.getCumulativeAmountToPay().add(clientsTotals));
                         clientRepository.save(client);
                     }
@@ -459,6 +463,8 @@ public class ProductDispatchService {
                         productData.put("unitPrice", product.getUnitPrice());
                         productData.put("deliveredQuantity", product.getDeliveredQuantity());
                         productData.put("deliveredProductPrice", product.getDeliveredProductPrice());
+                        productData.put("clientDeliveredProductPrice", product.getClientDeliveredProductPrice());
+                        productData.put("clientAmount", product.getClientAmount());
                         productData.put("saleDate", product.getSaleDate());
                         productsList.add(productData);
                     }

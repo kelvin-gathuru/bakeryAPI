@@ -20,6 +20,7 @@ public class ClientsDispatchedProducts {
     private Long clientsDispatchedProductID;
     private BigDecimal deliveredQuantity;
     private BigDecimal deliveredProductPrice;
+    private BigDecimal clientDeliveredProductPrice;
     private String productDispatchCode;
     @OneToOne
     @JoinColumn(name="createdBy")
@@ -29,6 +30,7 @@ public class ClientsDispatchedProducts {
     private String metric;
     private BigDecimal unitPrice;
     private BigDecimal price;
+    private BigDecimal clientAmount;
     private LocalDateTime saleDate;
     private Long clientID;
     @OneToOne
