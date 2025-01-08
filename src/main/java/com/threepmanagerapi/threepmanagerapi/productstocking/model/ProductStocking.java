@@ -21,6 +21,7 @@ public class ProductStocking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long productStockID;
     private BigDecimal quantity;
+    private BigDecimal unitPrice;
     private BigDecimal spoiledAtProduction;
     private BigDecimal spoiledAtPackaging;
     private BigDecimal totalPrice;

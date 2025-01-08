@@ -20,6 +20,7 @@ public class ProductStockUpdateDto {
     private Long productStockID;
     private BigDecimal initialQuantity;
     private BigDecimal updatedQuantity;
+    private BigDecimal unitPrice;
     private BigDecimal spoiledAtProduction;
     private BigDecimal spoiledAtPackaging;
     private LocalDateTime stockDate;

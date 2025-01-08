@@ -51,7 +51,7 @@ public class ProductStockingService {
             product.setRemainingQuantity(product.getRemainingQuantity().add(productStocking.getQuantity()));
             productStocking.setUser(userRepository.findByUserID(userID));
             productStocking.setStockDate(LocalDateTime.now());
-            productStocking.setTotalPrice(productStocking.getProduct().getUnitPrice().multiply(productStocking.getQuantity()));
+            productStocking.setTotalPrice(productStocking.getUnitPrice().multiply(productStocking.getQuantity()));
             productStockingRepository.save(productStocking);
             productRepository.save(product);
             return responseService.formulateResponse(
@@ -126,7 +126,7 @@ public class ProductStockingService {
             existingProductStocking.setSpoiledAtPackaging(productStockUpdateDto.getSpoiledAtPackaging());
             existingProductStocking.setUser(productStockUpdateDto.getUser());
             existingProductStocking.setDescription(productStockUpdateDto.getDescription());
-            existingProductStocking.setTotalPrice(productStockUpdateDto.getProduct().getUnitPrice().multiply(productStockUpdateDto.getUpdatedQuantity()));
+            existingProductStocking.setTotalPrice(productStockUpdateDto.getUnitPrice().multiply(productStockUpdateDto.getUpdatedQuantity()));
             productStockingRepository.save(existingProductStocking);
             productRepository.save(product);
             return responseService.formulateResponse(
