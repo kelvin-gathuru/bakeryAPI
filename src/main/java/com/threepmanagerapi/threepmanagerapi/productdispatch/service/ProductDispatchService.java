@@ -101,7 +101,7 @@ public class ProductDispatchService {
             if(existingProductDispatch!=null){
                 return responseService.formulateResponse(
                         null,
-                        "A problem found occurred in generating code. Try Again...",
+                        "A problem occurred in generating code. Try Again...",
                         HttpStatus.INTERNAL_SERVER_ERROR,
                         null,
                         false
@@ -201,6 +201,7 @@ public class ProductDispatchService {
             existingProductDispatch.setTotalSalesPrice(productDispatch.getTotalSalesPrice());
             existingProductDispatch.setCratesIn(productDispatch.getCratesIn());
             existingProductDispatch.setAmountPaid(productDispatch.getAmountPaid());
+            existingProductDispatch.setExpenses(productDispatch.getExpenses());
             existingProductDispatch.setReturnedDate(LocalDateTime.now());
             existingProductDispatch.setPaymentMode(productDispatch.getPaymentMode());
             existingProductDispatch.setReturned(true);
@@ -209,6 +210,7 @@ public class ProductDispatchService {
             supplier.setCumulativeAmountToPay(supplier.getCumulativeAmountToPay().add(productDispatch.getTotalSalesPrice()));
             supplier.setCumulativeAmountPaid(supplier.getCumulativeAmountPaid().add(productDispatch.getAmountPaid()));
             supplier.setCumulativeAmountBalance(supplier.getCumulativeAmountBalance().add(productDispatch.getBalance()));
+            supplier.setCumulativeExpenses(supplier.getCumulativeExpenses().add(productDispatch.getExpenses()));
             supplier.setCumulativeCratesIn(supplier.getCumulativeCratesIn().add(productDispatch.getCratesIn()));
             supplierRepository.save(supplier);
             emailService.sendProductDispatchReturn(existingProductDispatch.getSupplier().getAlternativeContact(),existingProductDispatch.getProductDispatchCode(),LocalDateTime.now().toString(),productDispatch.getAmountPaid().toString(),productDispatch.getBalance().toString() );

@@ -45,6 +45,7 @@ public class SupplierService {
             supplier.setCumulativeAmountBalance(BigDecimal.valueOf(0));
             supplier.setCumulativeCratesIn(BigDecimal.valueOf(0));
             supplier.setCumulativeCratesOut(BigDecimal.valueOf(0));
+            supplier.setCumulativeExpenses(BigDecimal.valueOf(0));
 
             supplierRepository.save(supplier);
             return responseService.formulateResponse(

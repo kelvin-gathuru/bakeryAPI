@@ -27,6 +27,7 @@ public class Supplier {
     private BigDecimal cumulativeAmountToPay;
     private BigDecimal cumulativeAmountPaid;
     private BigDecimal cumulativeAmountBalance;
+    private BigDecimal cumulativeExpenses;
     private BigDecimal cumulativeCratesOut;
     private BigDecimal cumulativeCratesIn;
 }

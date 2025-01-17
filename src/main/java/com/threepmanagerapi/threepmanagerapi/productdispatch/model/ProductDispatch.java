@@ -27,6 +27,7 @@ public class ProductDispatch {
     private BigDecimal totalSalesPrice;
     private BigDecimal amountPaid;
     private BigDecimal balance;
+    private BigDecimal expenses;
     private String vehicle;
     private String paymentMode;
     @OneToOne
