@@ -19,6 +19,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -44,12 +45,17 @@ public class SecurityConfiguration {
         return http.csrf(csrf -> csrf.disable())
                 .cors().configurationSource(corsConfigurationSource())
                 .and()
-                .authorizeHttpRequests().anyRequest().permitAll()
-                .and()
+                .authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/api/user/authenticate", 
+                                  "/api/user/forgotPassword",
+                                  "/api/user/resetPassword",
+                                  "/api/user/create").permitAll()
+                    .anyRequest().authenticated()
+                )
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
-//                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
 
     }
